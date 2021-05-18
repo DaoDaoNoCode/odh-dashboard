@@ -15,6 +15,7 @@ import DocCardBadges from './DocCardBadges';
 import { makeCardVisible } from '../utilities/utils';
 
 import './OdhCard.scss';
+import { useSegmentIOTracking } from '../utilities/segmentIOTrackingUtils';
 
 type OdhDocCardProps = {
   odhDoc: ODHDoc;
@@ -75,6 +76,12 @@ const OdhDocCard: React.FC<OdhDocCardProps> = ({ odhDoc, favorite, updateFavorit
         <a
           className="odh-card__footer__link"
           href={odhDoc.spec?.url ?? '#'}
+          onClick={()=>
+            useSegmentIOTracking('View Documentation Link Clicked', {
+              name: odhDoc.metadata.name,
+              link: odhDoc.spec?.url ?? '#'
+            })
+          }
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -88,6 +95,12 @@ const OdhDocCard: React.FC<OdhDocCardProps> = ({ odhDoc, favorite, updateFavorit
         <a
           className="odh-card__footer__link"
           href={odhDoc.spec?.url ?? '#'}
+          onClick={()=>
+            useSegmentIOTracking('Access Tutorial Link Clicked', {
+              name: odhDoc.metadata.name,
+              link: odhDoc.spec?.url ?? '#'
+            })
+          }
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -108,6 +121,12 @@ const OdhDocCard: React.FC<OdhDocCardProps> = ({ odhDoc, favorite, updateFavorit
         <a
           className="odh-card__footer__link"
           href={odhDoc.spec?.url ?? '#'}
+          onClick={()=>
+            useSegmentIOTracking('Read How-to Article Link Clicked', {
+              name: odhDoc.metadata.name,
+              link: odhDoc.spec?.url ?? '#'
+            })
+          }
           target="_blank"
           rel="noopener noreferrer"
         >

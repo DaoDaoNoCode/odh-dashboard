@@ -1,8 +1,11 @@
 import {
   getQuickStartStatus,
   QuickStartContextValues,
+  QuickStartState,
   QuickStartStatus,
 } from '@cloudmosaic/quickstarts';
+import { objDifference } from './objDifference';
+import { useSegmentIOTracking } from './segmentIOTrackingUtils';
 
 export enum LaunchStatusEnum {
   Start = 'Start',
@@ -110,3 +113,42 @@ export const launchQuickStart = (
 
   qsContext.setActiveQuickStart(quickStartId);
 };
+
+export const fireQuickStartEvent = (quickStartID: string, oldQuickStartState: QuickStartState, newQuickStartState: QuickStartState) => {
+  const quickStartStateDifference: QuickStartState = objDifference(newQuickStartState, oldQuickStartState);
+  console.log(quickStartStateDifference);
+  const { status, taskNumber } = newQuickStartState;
+  if (quickStartStateDifference.hasOwnProperty('status')) {
+    if (status == QuickStartStatus.NOT_STARTED) {
+     useSegmentIOTracking("Quick Start Initiated", {
+        id: quickStartID,
+        type: 'start'
+      })
+    }
+    if (status == QuickStartStatus.COMPLETE) {
+      useSegmentIOTracking("Quick Start Completed", {
+        id: quickStartID
+      })
+    }
+  }
+  if (status == QuickStartStatus.IN_PROGRESS) {
+    if (taskNumber == -1) {
+      useSegmentIOTracking("Quick Start Initiated", {
+        id: quickStartID,
+        type: 'restart'
+      })
+    } else {
+      if (quickStartStateDifference.hasOwnProperty('taskNumber')) {
+        useSegmentIOTracking("Quick Start In Progress", {
+          id: quickStartID,
+          taskNumber: taskNumber
+        })
+      } else {
+        useSegmentIOTracking("Quick Start In Progress", {
+          id: quickStartID,
+          ...quickStartStateDifference
+        })
+      }
+    }
+  }
+}

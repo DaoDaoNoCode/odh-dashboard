@@ -9,11 +9,14 @@ import Routes from './Routes';
 import NavSidebar from './NavSidebar';
 
 import './App.scss';
+import { useHistory } from 'react-router';
+import { useSegmentIOTracking } from '../utilities/segmentIOTrackingUtils';
 
 const App: React.FC = () => {
   const isDeskTop = useDesktopWidth();
   const [isNavOpen, setIsNavOpen] = React.useState(isDeskTop);
   const dispatch = useDispatch();
+  const history = useHistory();
 
   React.useEffect(() => {
     dispatch(detectUser());
@@ -27,12 +30,31 @@ const App: React.FC = () => {
     setIsNavOpen(!isNavOpen);
   };
 
+  const TrackInteraction= React.memo(() => {
+    // notify url change events
+    React.useEffect(() => {
+      useSegmentIOTracking('page');
+  
+      let { pathname } = history.location;
+      history.listen((location) => {
+        const { pathname: nextPathname } = history.location;
+        if (pathname !== nextPathname) {
+          pathname = nextPathname;
+          useSegmentIOTracking('page');
+        }
+      });
+    }, [useSegmentIOTracking]);
+  
+    return null;
+  });
+
   return (
     <Page
       className="odh-dashboard"
       header={<Header isNavOpen={isNavOpen} onNavToggle={onNavToggle} />}
       sidebar={<NavSidebar isNavOpen={isNavOpen} />}
     >
+      <TrackInteraction />
       <Routes />
     </Page>
   );
