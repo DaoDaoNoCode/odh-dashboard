@@ -30,11 +30,9 @@ const App: React.FC = () => {
     setIsNavOpen(!isNavOpen);
   };
 
-  const TrackInteraction= React.memo(() => {
+  const TrackInteraction = React.memo(() => {
     // notify url change events
     React.useEffect(() => {
-      useSegmentIOTracking('page');
-  
       let { pathname } = history.location;
       history.listen((location) => {
         const { pathname: nextPathname } = history.location;
