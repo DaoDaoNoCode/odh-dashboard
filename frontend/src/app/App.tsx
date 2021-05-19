@@ -34,13 +34,14 @@ const App: React.FC = () => {
     // notify url change events
     React.useEffect(() => {
       let { pathname } = history.location;
-      history.listen((location) => {
+      const unlisten = history.listen((location) => {
         const { pathname: nextPathname } = history.location;
         if (pathname !== nextPathname) {
           pathname = nextPathname;
           useSegmentIOTracking('page');
         }
       });
+      return () => unlisten();
     }, [useSegmentIOTracking]);
   
     return null;

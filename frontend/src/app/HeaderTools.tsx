@@ -27,7 +27,7 @@ const HeaderTools: React.FC = () => {
   const [segmentKeyModalOpen, setSegmentKeyModalOpen] = React.useState<boolean>(false);
   const [segmentKey, setSegmentKey] = React.useState<string>('');
   const [segmentKeyEnabled, setSegmentKeyEnabled] = React.useState<boolean>(false);
-  const username = useSelector(state => (state as any).appReducer.user?.name);
+  const username = useSelector(state => (state as any).appReducer.user);
   console.log(username);
 
   // notify segment key enabled
