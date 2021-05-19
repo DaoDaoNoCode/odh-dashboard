@@ -6,7 +6,7 @@ import { DEV_MODE } from '../utils/constants';
 import { initializeWatchedResources } from '../utils/resourceUtils';
 
 const kc = new k8s.KubeConfig();
-kc.loadFromDefault();
+kc.loadFromCluster();
 
 const currentContext = kc.getCurrentContext();
 const customObjectsApi = kc.makeApiClient(k8s.CustomObjectsApi);
