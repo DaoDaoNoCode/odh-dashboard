@@ -4,7 +4,6 @@ const list = require('./list');
 
 module.exports = async (fastify, opts) => {
   fastify.get('/', async (request, reply) => {
-    console.log(request.headers)
     return list({ fastify, opts, request, reply })
       .then((res) => {
         if (DEV_MODE) {
