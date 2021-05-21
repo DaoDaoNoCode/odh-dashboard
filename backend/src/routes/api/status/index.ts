@@ -23,7 +23,6 @@ const status = async (
     return Promise.resolve({
       kube: {
         currentContext,
-        currentUser,
         namespace,
         userName,
       },
@@ -35,7 +34,6 @@ export default async (fastify: FastifyInstance): Promise<void> => {
   fastify.get('/', async (request, reply) => {
     return status(fastify, request)
       .then((res) => {
-        console.log(request.headers);
         if (DEV_MODE) {
           addCORSHeader(request, reply);
         }
