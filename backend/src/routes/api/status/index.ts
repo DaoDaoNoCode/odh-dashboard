@@ -23,6 +23,7 @@ const status = async (
     return Promise.resolve({
       kube: {
         currentContext,
+        currentUser,
         namespace,
         userName,
       },
