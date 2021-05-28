@@ -10,13 +10,15 @@ import NavSidebar from './NavSidebar';
 
 import './App.scss';
 import { useHistory } from 'react-router';
-import { useSegmentIOTracking } from '../utilities/segmentIOTrackingUtils';
+import { useSegmentIOTracking } from '../utilities/useSegmentIOTracking';
+import { fireTrackingEvent, initSegment } from '../utilities/segmentIOUtils';
 
 const App: React.FC = () => {
   const isDeskTop = useDesktopWidth();
   const [isNavOpen, setIsNavOpen] = React.useState(isDeskTop);
   const dispatch = useDispatch();
   const history = useHistory();
+  const { segmentKey, loaded, loadError } = useSegmentIOTracking();
 
   React.useEffect(() => {
     dispatch(detectUser());
@@ -30,6 +32,12 @@ const App: React.FC = () => {
     setIsNavOpen(!isNavOpen);
   };
 
+  React.useEffect(() => {
+    if (segmentKey && loaded && !loadError) {
+      initSegment({ segmentKey });
+    }
+  }, [segmentKey, loaded, loadError])
+
   const TrackInteraction = React.memo(() => {
     // notify url change events
     React.useEffect(() => {
@@ -38,12 +46,12 @@ const App: React.FC = () => {
         const { pathname: nextPathname } = history.location;
         if (pathname !== nextPathname) {
           pathname = nextPathname;
-          useSegmentIOTracking('page');
+          fireTrackingEvent('page');
         }
       });
       return () => unlisten();
-    }, [useSegmentIOTracking]);
-  
+    }, [fireTrackingEvent]);
+
     return null;
   });
 

@@ -1,4 +1,4 @@
-export const useSegmentIOTracking = (eventType: string, properties?: any) => {
+export const fireTrackingEvent = (eventType: string, properties?: any) => {
   if ((window as any).analytics) {
     switch (eventType) {
       case 'identify':
@@ -75,8 +75,8 @@ export const initSegment = async (props) => {
     // const anonymousIdBuffer = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(username));
     // const anonymousIdArray = Array.from(new Uint8Array(anonymousIdBuffer));
     // const anonymousId = anonymousIdArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-    useSegmentIOTracking('identify', randomString());
-    useSegmentIOTracking('page');
+    fireTrackingEvent('identify', randomString());
+    fireTrackingEvent('page');
   }
 };
 

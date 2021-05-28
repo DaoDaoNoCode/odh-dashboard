@@ -21,7 +21,7 @@ import { fetchGettingStartedDoc } from '../../services/gettingStartedService';
 import EnableModal from './EnableModal';
 
 import './GetStartedPanel.scss';
-import { useSegmentIOTracking } from '../../utilities/segmentIOTrackingUtils';
+import { fireTrackingEvent } from '../../utilities/segmentIOUtils';
 
 type GetStartedPanelProps = {
   selectedApp?: ODHApp;
@@ -123,7 +123,7 @@ const GetStartedPanel: React.FC<GetStartedPanelProps> = ({ selectedApp, onClose 
               className="pf-c-button pf-m-primary"
               href={selectedApp.spec.getStartedLink}
               onClick={()=>
-                useSegmentIOTracking("Get Started Link Clicked", {
+                fireTrackingEvent("Get Started Link Clicked", {
                   name: selectedApp.spec.displayName,
                   link: selectedApp.spec.getStartedLink
                 })

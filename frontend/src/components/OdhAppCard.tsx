@@ -18,7 +18,7 @@ import SupportedAppTitle from './SupportedAppTitle';
 
 import './OdhCard.scss';
 import { makeCardVisible } from '../utilities/utils';
-import { useSegmentIOTracking } from 'utilities/segmentIOTrackingUtils';
+import { fireTrackingEvent } from 'utilities/segmentIOUtils';
 
 type OdhAppCardProps = {
   odhApp: ODHApp;
@@ -60,7 +60,7 @@ const OdhAppCard: React.FC<OdhAppCardProps> = ({ odhApp }) => {
       target="_blank"
       rel="noopener noreferrer"
       onClick={() => {
-        useSegmentIOTracking('View Documentation Clicked', {
+        fireTrackingEvent('View Documentation Clicked', {
           name: odhApp.metadata.name
         })
       }}
@@ -79,7 +79,7 @@ const OdhAppCard: React.FC<OdhAppCardProps> = ({ odhApp }) => {
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => {
-          useSegmentIOTracking('Application Launched', {
+          fireTrackingEvent('Application Launched', {
             name: odhApp.metadata.name
           })
         }}
@@ -105,7 +105,7 @@ const OdhAppCard: React.FC<OdhAppCardProps> = ({ odhApp }) => {
         target="_blank"
         rel="noopener noreferrer"
         onClick={() => {
-          useSegmentIOTracking('Application Launched', {
+          fireTrackingEvent('Application Launched', {
             name: odhApp.metadata.name
           })
         }}

@@ -156,3 +156,7 @@ export type ODHGettingStarted = {
   appName: string;
   markdown: string;
 };
+
+export type ODHSegmentKey = {
+  segmentKey: string;
+}

@@ -4,7 +4,7 @@ import { Card, CardHeader, CardBody } from '@patternfly/react-core';
 import { ODHApp } from '../types';
 import BrandImage from './BrandImage';
 import SupportedAppTitle from './SupportedAppTitle';
-import { useSegmentIOTracking } from '../utilities/segmentIOTrackingUtils';
+import { fireTrackingEvent } from '../utilities/segmentIOUtils';
 
 import './OdhCard.scss';
 import { makeCardVisible } from '../utilities/utils';
@@ -37,7 +37,7 @@ const OdhExploreCard: React.FC<OdhExploreCardProps> = ({ odhApp, isSelected, onS
       className={cardClasses}
       onClick={() => {
         !odhApp.spec.comingSoon && onSelect();
-        useSegmentIOTracking("Card Clicked", {
+        fireTrackingEvent("Card Clicked", {
           name: odhApp.metadata.name
         })
       }}

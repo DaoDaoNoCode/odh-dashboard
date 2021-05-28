@@ -15,7 +15,7 @@ import DocCardBadges from './DocCardBadges';
 import { makeCardVisible } from '../utilities/utils';
 
 import './OdhCard.scss';
-import { useSegmentIOTracking } from '../utilities/segmentIOTrackingUtils';
+import { fireTrackingEvent } from '../utilities/segmentIOUtils';
 
 type OdhDocCardProps = {
   odhDoc: ODHDoc;
@@ -77,7 +77,7 @@ const OdhDocCard: React.FC<OdhDocCardProps> = ({ odhDoc, favorite, updateFavorit
           className="odh-card__footer__link"
           href={odhDoc.spec?.url ?? '#'}
           onClick={()=>
-            useSegmentIOTracking('View Documentation Link Clicked', {
+            fireTrackingEvent('View Documentation Link Clicked', {
               name: odhDoc.metadata.name,
               link: odhDoc.spec?.url ?? '#'
             })
@@ -96,7 +96,7 @@ const OdhDocCard: React.FC<OdhDocCardProps> = ({ odhDoc, favorite, updateFavorit
           className="odh-card__footer__link"
           href={odhDoc.spec?.url ?? '#'}
           onClick={()=>
-            useSegmentIOTracking('Access Tutorial Link Clicked', {
+            fireTrackingEvent('Access Tutorial Link Clicked', {
               name: odhDoc.metadata.name,
               link: odhDoc.spec?.url ?? '#'
             })
@@ -122,7 +122,7 @@ const OdhDocCard: React.FC<OdhDocCardProps> = ({ odhDoc, favorite, updateFavorit
           className="odh-card__footer__link"
           href={odhDoc.spec?.url ?? '#'}
           onClick={()=>
-            useSegmentIOTracking('Read How-to Article Link Clicked', {
+            fireTrackingEvent('Read How-to Article Link Clicked', {
               name: odhDoc.metadata.name,
               link: odhDoc.spec?.url ?? '#'
             })

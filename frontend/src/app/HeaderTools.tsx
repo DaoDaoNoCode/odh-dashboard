@@ -18,7 +18,7 @@ import {
 import { DOC_LINK, SUPPORT_LINK } from '../utilities/const';
 import SegmentKeyModal from './SegmentKeyModal'
 import { useSelector } from 'react-redux';
-import { initSegment } from 'utilities/segmentIOTrackingUtils';
+import { initSegment } from 'utilities/segmentIOUtils';
 
 const HeaderTools: React.FC = () => {
   const [userMenuOpen, setUserMenuOpen] = React.useState<boolean>(false);
@@ -28,7 +28,6 @@ const HeaderTools: React.FC = () => {
   const [segmentKey, setSegmentKey] = React.useState<string>('');
   const [segmentKeyEnabled, setSegmentKeyEnabled] = React.useState<boolean>(false);
   const username = useSelector(state => (state as any).appReducer.user);
-  console.log(username);
 
   // notify segment key enabled
   React.useEffect(() => {
