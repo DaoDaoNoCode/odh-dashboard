@@ -1,5 +1,4 @@
 import { KubeFastifyInstance, ODHSegmentKey } from '../../../types';
-const openshiftRestClient = require('openshift-rest-client').OpenshiftClient;
 
 export const getSegmentKey = async (
   fastify: KubeFastifyInstance
