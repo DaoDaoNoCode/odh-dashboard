@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import '@patternfly/patternfly/patternfly.min.css';
 import { Page } from '@patternfly/react-core';
 import { detectUser } from '../redux/actions/actions';
@@ -12,6 +12,7 @@ import './App.scss';
 import { useHistory } from 'react-router';
 import { useSegmentIOTracking } from '../utilities/useSegmentIOTracking';
 import { fireTrackingEvent, initSegment } from '../utilities/segmentIOUtils';
+import { RootState } from '../redux/types';
 
 const App: React.FC = () => {
   const isDeskTop = useDesktopWidth();
@@ -19,6 +20,8 @@ const App: React.FC = () => {
   const dispatch = useDispatch();
   const history = useHistory();
   const { segmentKey, loaded, loadError } = useSegmentIOTracking();
+  const username = useSelector((state: RootState) => state.appReducer.user);
+  const clusterID = useSelector((state: RootState) => state.appReducer.clusterID);
 
   React.useEffect(() => {
     dispatch(detectUser());
@@ -33,16 +36,17 @@ const App: React.FC = () => {
   };
 
   React.useEffect(() => {
-    if (segmentKey && loaded && !loadError) {
-      initSegment({ segmentKey });
+    if (segmentKey && loaded && !loadError && username && clusterID) {
+      window.clusterID = clusterID;
+      initSegment({ segmentKey, username });
     }
-  }, [segmentKey, loaded, loadError])
+  }, [segmentKey, loaded, loadError, username, clusterID])
 
   const TrackInteraction = React.memo(() => {
     // notify url change events
     React.useEffect(() => {
       let { pathname } = history.location;
-      const unlisten = history.listen((location) => {
+      const unlisten = history.listen(() => {
         const { pathname: nextPathname } = history.location;
         if (pathname !== nextPathname) {
           pathname = nextPathname;

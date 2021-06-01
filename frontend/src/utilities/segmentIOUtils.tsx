@@ -1,21 +1,22 @@
 export const fireTrackingEvent = (eventType: string, properties?: any) => {
-  if ((window as any).analytics) {
+  const clusterID = window.clusterID ?? '';
+  if (window.analytics) {
     switch (eventType) {
       case 'identify':
-        (window as any).analytics.identify(properties);
+        window.analytics.identify(properties, { clusterID });
         break;
       case 'page':
-        (window as any).analytics.page();
+        window.analytics.page(undefined, { clusterID });
         break;
       default:
-        (window as any).analytics.track(eventType, properties);
+        window.analytics.track(eventType, {...properties, clusterID});
     }
   }
 }
 
 export const initSegment = async (props) => {
   const { segmentKey, username } = props;
-  const analytics = ((window as any).analytics = (window as any).analytics || []);
+  const analytics = (window.analytics = window.analytics || []);
   if (analytics.initialize) {
     return;
   }
@@ -72,19 +73,10 @@ export const initSegment = async (props) => {
     if (segmentKey) {
       analytics.load(segmentKey);
     }
-    // const anonymousIdBuffer = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(username));
-    // const anonymousIdArray = Array.from(new Uint8Array(anonymousIdBuffer));
-    // const anonymousId = anonymousIdArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-    fireTrackingEvent('identify', randomString());
+    const anonymousIdBuffer = await crypto.subtle.digest('SHA-1', new TextEncoder().encode(username));
+    const anonymousIdArray = Array.from(new Uint8Array(anonymousIdBuffer));
+    const anonymousId = anonymousIdArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+    fireTrackingEvent('identify', anonymousId);
     fireTrackingEvent('page');
   }
 };
-
-const randomString = () => {
-  const t = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let n = "";
-  for (let i = 0; i < 32; i++) {
-    n += t.charAt(Math.floor(Math.random() * t.length));
-  }
-  return n;
-}

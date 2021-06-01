@@ -69,6 +69,7 @@ export type KubeStatus = {
   currentUser: User;
   namespace: string;
   userName: string | string[];
+  clusterID: string;
 };
 
 export type KubeDecorator = KubeStatus & {

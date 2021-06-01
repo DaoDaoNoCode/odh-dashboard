@@ -62,46 +62,44 @@ const HeaderTools: React.FC = () => {
       <ExternalLinkAltIcon />
     </DropdownItem>,
   ];
-  
+
   return (
-    <>
-      <PageHeaderTools>
-        <PageHeaderToolsGroup className="hidden-xs">
-          <PageHeaderToolsItem>
-            <Dropdown
-              position={DropdownPosition.right}
-              toggle={
-                <DropdownToggle
-                  id="toggle-id"
-                  onToggle={() => setHelpMenuOpen(!helpMenuOpen)}
-                  toggleIndicator={CaretDownIcon}
-                >
-                  <QuestionCircleIcon />
-                </DropdownToggle>
-              }
-              isOpen={helpMenuOpen}
-              dropdownItems={helpMenuItems}
-            />
-          </PageHeaderToolsItem>
-          <PageHeaderToolsItem>
-            <Dropdown
-              position={DropdownPosition.right}
-              toggle={
-                <DropdownToggle
-                  id="toggle-id"
-                  onToggle={() => setUserMenuOpen(!userMenuOpen)}
-                  toggleIndicator={CaretDownIcon}
-                >
-                  <UserIcon className="odh-dashboard__user-icon" />
-                </DropdownToggle>
-              }
-              isOpen={userMenuOpen}
-              dropdownItems={userMenuItems}
-            />
-          </PageHeaderToolsItem>
-        </PageHeaderToolsGroup>
-      </PageHeaderTools>
-    </>
+    <PageHeaderTools>
+      <PageHeaderToolsGroup className="hidden-xs">
+        <PageHeaderToolsItem>
+          <Dropdown
+            position={DropdownPosition.right}
+            toggle={
+              <DropdownToggle
+                id="toggle-id"
+                onToggle={() => setHelpMenuOpen(!helpMenuOpen)}
+                toggleIndicator={CaretDownIcon}
+              >
+                <QuestionCircleIcon />
+              </DropdownToggle>
+            }
+            isOpen={helpMenuOpen}
+            dropdownItems={helpMenuItems}
+          />
+        </PageHeaderToolsItem>
+        <PageHeaderToolsItem>
+          <Dropdown
+            position={DropdownPosition.right}
+            toggle={
+              <DropdownToggle
+                id="toggle-id"
+                onToggle={() => setUserMenuOpen(!userMenuOpen)}
+                toggleIndicator={CaretDownIcon}
+              >
+                <UserIcon className="odh-dashboard__user-icon" />
+              </DropdownToggle>
+            }
+            isOpen={userMenuOpen}
+            dropdownItems={userMenuItems}
+          />
+        </PageHeaderToolsItem>
+      </PageHeaderToolsGroup>
+    </PageHeaderTools>
   );
 };
 

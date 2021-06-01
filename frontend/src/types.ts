@@ -2,6 +2,13 @@
  * Common types, should be kept up to date with backend types
  */
 
+declare global {
+  interface Window {
+    analytics?: any;
+    clusterID?: string;
+  }
+}
+
 export type ODHApp = {
   metadata: {
     name: string;
