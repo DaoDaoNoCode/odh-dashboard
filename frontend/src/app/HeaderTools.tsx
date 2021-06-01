@@ -10,31 +10,15 @@ import {
 } from '@patternfly/react-core';
 import {
   CaretDownIcon,
-  CogIcon,
   ExternalLinkAltIcon,
   QuestionCircleIcon,
   UserIcon,
 } from '@patternfly/react-icons';
 import { DOC_LINK, SUPPORT_LINK } from '../utilities/const';
-import SegmentKeyModal from './SegmentKeyModal'
-import { useSelector } from 'react-redux';
-import { initSegment } from 'utilities/segmentIOUtils';
 
 const HeaderTools: React.FC = () => {
   const [userMenuOpen, setUserMenuOpen] = React.useState<boolean>(false);
   const [helpMenuOpen, setHelpMenuOpen] = React.useState<boolean>(false);
-  const [settingsMenuOpen, setSettingsMenuOpen] = React.useState<boolean>(false);
-  const [segmentKeyModalOpen, setSegmentKeyModalOpen] = React.useState<boolean>(false);
-  const [segmentKey, setSegmentKey] = React.useState<string>('');
-  const [segmentKeyEnabled, setSegmentKeyEnabled] = React.useState<boolean>(false);
-  const username = useSelector(state => (state as any).appReducer.user);
-
-  // notify segment key enabled
-  React.useEffect(() => {
-    if (username && segmentKey && segmentKeyEnabled) {
-      initSegment({ segmentKey, username });
-    }
-  }, [username, segmentKey, segmentKeyEnabled]);
 
   const handleLogout = () => {
     setUserMenuOpen(false);
@@ -78,38 +62,11 @@ const HeaderTools: React.FC = () => {
       <ExternalLinkAltIcon />
     </DropdownItem>,
   ];
-
-  const handleSegmentKeySettingsClick = () => {
-    setSettingsMenuOpen(false);
-    setSegmentKeyModalOpen(true);
-  }
-
-  const settingsMenuItems = [
-    <DropdownItem key="segment-key" onClick={handleSegmentKeySettingsClick}>
-      Segment Key
-    </DropdownItem>
-  ];
-
+  
   return (
     <>
       <PageHeaderTools>
         <PageHeaderToolsGroup className="hidden-xs">
-          <PageHeaderToolsItem>
-            <Dropdown
-              position={DropdownPosition.right}
-              toggle={
-                <DropdownToggle
-                  id="toggle-id"
-                  onToggle={() => setSettingsMenuOpen(!settingsMenuOpen)}
-                  toggleIndicator={CaretDownIcon}
-                >
-                  <CogIcon />
-                </DropdownToggle>
-              }
-              isOpen={settingsMenuOpen}
-              dropdownItems={settingsMenuItems}
-            />
-          </PageHeaderToolsItem>
           <PageHeaderToolsItem>
             <Dropdown
               position={DropdownPosition.right}
@@ -144,15 +101,6 @@ const HeaderTools: React.FC = () => {
           </PageHeaderToolsItem>
         </PageHeaderToolsGroup>
       </PageHeaderTools>
-      {segmentKeyModalOpen ? (
-        <SegmentKeyModal
-          segmentKey={segmentKey}
-          setSegmentKey={setSegmentKey}
-          segmentKeyEnabled={segmentKeyEnabled}
-          setSegmentKeyEnabled={setSegmentKeyEnabled}
-          onClose={() => setSegmentKeyModalOpen(false)}
-        />
-      ) : null}
     </>
   );
 };
