@@ -17,7 +17,7 @@ import {
   UserIcon,
 } from '@patternfly/react-icons';
 import { COMMUNITY_LINK, DOC_LINK, SUPPORT_LINK } from '../utilities/const';
-import { AppNotification, State } from '../redux/types';
+import { AppNotification, State, RootState } from '../redux/types';
 
 interface HeaderToolsProps {
   onNotificationsClick: () => void;
@@ -26,6 +26,7 @@ interface HeaderToolsProps {
 const HeaderTools: React.FC<HeaderToolsProps> = ({ onNotificationsClick }) => {
   const [userMenuOpen, setUserMenuOpen] = React.useState<boolean>(false);
   const [helpMenuOpen, setHelpMenuOpen] = React.useState<boolean>(false);
+  const username = useSelector((state: RootState) => state.appState.user);
   const notifications: AppNotification[] = useSelector<State, AppNotification[]>(
     (state) => state.appState.notifications,
   );
@@ -43,6 +44,9 @@ const HeaderTools: React.FC<HeaderToolsProps> = ({ onNotificationsClick }) => {
   };
 
   const userMenuItems = [
+    <DropdownItem key="user" onClick={()=>{}}>
+      {username}
+    </DropdownItem>,
     <DropdownItem key="logout" onClick={handleLogout}>
       Log out
     </DropdownItem>,
