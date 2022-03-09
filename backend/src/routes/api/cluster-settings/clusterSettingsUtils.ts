@@ -4,7 +4,7 @@ import { KubeFastifyInstance, ClusterSettings } from '../../../types';
 export const updateClusterSettings = async (
   fastify: KubeFastifyInstance,
   request: FastifyRequest,
-): Promise<ClusterSettings | string> => {
+): Promise<{ success: boolean; error: string }> => {
   const coreV1Api = fastify.kube.coreV1Api;
   const namespace = fastify.kube.namespace;
   const query = request.query as { [key: string]: string };
@@ -27,13 +27,11 @@ export const updateClusterSettings = async (
         },
       );
     }
-    return {
-      pvcSize: Number(query.pvcSize),
-    };
+    return { success: true, error: null };
   } catch (e) {
     if (e.response?.statusCode !== 404) {
       fastify.log.error('Setting cluster settings error: ' + e.toString());
-      return 'Unable to update cluster settings.';
+      return { success: false, error: 'Unable to update cluster settings. ' + e.message };
     }
   }
 };

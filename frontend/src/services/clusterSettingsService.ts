@@ -14,7 +14,9 @@ export const fetchClusterSettings = (): Promise<ClusterSettings> => {
     });
 };
 
-export const updateClusterSettings = (settings: ClusterSettings): Promise<ClusterSettings> => {
+export const updateClusterSettings = (
+  settings: ClusterSettings,
+): Promise<{ success: boolean; error: string }> => {
   const url = getBackendURL('/api/cluster-settings/update');
   const updateParams = new URLSearchParams();
 

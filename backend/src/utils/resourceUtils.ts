@@ -247,11 +247,9 @@ const getBuildConfigStatus = (
       `buildconfig=${bcName}`,
     )
     .then((res) => {
-      const bcBuilds = (
-        res?.body as {
-          items: BuildKind[];
-        }
-      )?.items;
+      const bcBuilds = (res?.body as {
+        items: BuildKind[];
+      })?.items;
       if (bcBuilds.length === 0) {
         return {
           name: notebookName,
