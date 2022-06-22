@@ -10,12 +10,12 @@ export const yamlRegExp = /\.ya?ml$/;
 export const mdRegExp = /\.md$/;
 
 export const IMAGE_ANNOTATIONS = {
-    DESC: 'opendatahub.io/notebook-image-desc',
-    DISP_NAME: 'opendatahub.io/notebook-image-name',
-    URL: 'opendatahub.io/notebook-image-url',
-    DEFAULT: 'opendatahub.io/default-image',
-    SOFTWARE: 'opendatahub.io/notebook-software',
-    DEPENDENCIES: 'opendatahub.io/notebook-python-dependencies',
-    IMAGE_ORDER: 'opendatahub.io/notebook-image-order',
-    RECOMMENDED: 'opendatahub.io/notebook-image-recommended',
-  };
+  DESC: 'opendatahub.io/notebook-image-desc',
+  DISP_NAME: 'opendatahub.io/notebook-image-name',
+  URL: 'opendatahub.io/notebook-image-url',
+  DEFAULT: 'opendatahub.io/default-image',
+  SOFTWARE: 'opendatahub.io/notebook-software',
+  DEPENDENCIES: 'opendatahub.io/notebook-python-dependencies',
+  IMAGE_ORDER: 'opendatahub.io/notebook-image-order',
+  RECOMMENDED: 'opendatahub.io/notebook-image-recommended',
+};

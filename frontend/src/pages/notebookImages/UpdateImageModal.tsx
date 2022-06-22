@@ -17,34 +17,34 @@ import {
 } from '@patternfly/react-core';
 import { Caption, TableComposable, Tbody, Thead, Th, Tr } from '@patternfly/react-table';
 import { CubesIcon, ExclamationCircleIcon, PlusCircleIcon } from '@patternfly/react-icons';
-import { updateNotebook } from '../../services/notebookImageService';
+import { updateBYONImage } from '../../services/BYONImageService';
 import { EditStepTableRow } from './EditStepTableRow';
-import { Notebook, NotebookPackage } from 'types';
+import { BYONImage, BYONImagePackage } from 'types';
 import './UpdateImageModal.scss';
 import { useDispatch } from 'react-redux';
 import { addNotification } from '../../redux/actions/actions';
 
 export type UpdateImageModalProps = {
   isOpen: boolean;
-  notebook: Notebook;
+  image: BYONImage;
   onCloseHandler: () => void;
   onUpdateHandler();
 };
 export const UpdateImageModal: React.FC<UpdateImageModalProps> = ({
   isOpen,
-  notebook,
+  image,
   onUpdateHandler,
   onCloseHandler,
 }) => {
-  const [name, setName] = React.useState<string>(notebook.name);
+  const [name, setName] = React.useState<string>(image.name);
   const [description, setDescription] = React.useState<string>(
-    notebook.description != undefined ? notebook.description : '',
+    image.description != undefined ? image.description : '',
   );
-  const [packages, setPackages] = React.useState<NotebookPackage[]>(
-    notebook.packages != undefined ? notebook.packages : [],
+  const [packages, setPackages] = React.useState<BYONImagePackage[]>(
+    image.packages != undefined ? image.packages : [],
   );
-  const [software, setSoftware] = React.useState<NotebookPackage[]>(
-    notebook.software != undefined ? notebook.software : [],
+  const [software, setSoftware] = React.useState<BYONImagePackage[]>(
+    image.software != undefined ? image.software : [],
   );
   const [activeTabKey, setActiveTabKey] = React.useState<number>(0);
   const [validName, setValidName] = React.useState<boolean>(true);
@@ -52,10 +52,10 @@ export const UpdateImageModal: React.FC<UpdateImageModalProps> = ({
 
   React.useEffect(() => {
     if (isOpen === true) {
-      setName(notebook.name);
-      setDescription(notebook.description != undefined ? notebook.description : '');
-      setPackages(notebook.packages != undefined ? notebook.packages : []);
-      setSoftware(notebook.software != undefined ? notebook.software : []);
+      setName(image.name);
+      setDescription(image.description != undefined ? image.description : '');
+      setPackages(image.packages != undefined ? image.packages : []);
+      setSoftware(image.software != undefined ? image.software : []);
       setValidName(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -64,7 +64,7 @@ export const UpdateImageModal: React.FC<UpdateImageModalProps> = ({
   return (
     <Modal
       variant={ModalVariant.medium}
-      title={`Edit Package Documentation for ${notebook.name}`}
+      title={`Edit Package Documentation for ${image.name}`}
       isOpen={isOpen}
       onClose={onCloseHandler}
       actions={[
@@ -74,8 +74,8 @@ export const UpdateImageModal: React.FC<UpdateImageModalProps> = ({
           variant="primary"
           onClick={() => {
             if (name.length > 0) {
-              updateNotebook({
-                id: notebook.id,
+              updateBYONImage({
+                id: image.id,
                 name: name,
                 description: description,
                 packages: packages,
@@ -86,7 +86,7 @@ export const UpdateImageModal: React.FC<UpdateImageModalProps> = ({
                     addNotification({
                       status: 'danger',
                       title: 'Error',
-                      message: `Unable to update notebook image ${name}`,
+                      message: `Unable to update image image ${name}`,
                       timestamp: new Date(),
                     }),
                   );
@@ -114,7 +114,7 @@ export const UpdateImageModal: React.FC<UpdateImageModalProps> = ({
         <FormGroup
           label="Name"
           isRequired
-          fieldId="notebook-image-name-label"
+          fieldId="image-image-name-label"
           helperTextInvalid="This field is required."
           helperTextInvalidIcon={<ExclamationCircleIcon />}
           validated={validName ? undefined : 'error'}
@@ -122,28 +122,28 @@ export const UpdateImageModal: React.FC<UpdateImageModalProps> = ({
           <TextInput
             isRequired
             type="text"
-            id="notebook-image-name-input"
-            name="notebook-image-name-input"
+            id="image-image-name-input"
+            name="image-image-name-input"
             value={name}
             onChange={(value) => {
               setName(value);
             }}
           />
         </FormGroup>
-        <FormGroup label="Description" fieldId="notebook-image-description">
+        <FormGroup label="Description" fieldId="image-image-description">
           <TextInput
             isRequired
             type="text"
-            id="notebook-image-description-input"
-            name="notebook-image-description-input"
-            aria-describedby="notebook-image-description-input"
+            id="image-image-description-input"
+            name="image-image-description-input"
+            aria-describedby="image-image-description-input"
             value={description}
             onChange={(value) => {
               setDescription(value);
             }}
           />
         </FormGroup>
-        <FormGroup fieldId="notebook-software-packages">
+        <FormGroup fieldId="image-software-packages">
           <Tabs
             activeKey={activeTabKey}
             onSelect={(_event, indexKey) => {
@@ -155,8 +155,8 @@ export const UpdateImageModal: React.FC<UpdateImageModalProps> = ({
                 <>
                   <TableComposable aria-label="Simple table" variant="compact">
                     <Caption>
-                      Change the advertised software shown with this notebook image. Modifying the
-                      software here does not effect the contents of the notebook image.
+                      Change the advertised software shown with this image image. Modifying the
+                      software here does not effect the contents of the image image.
                     </Caption>
                     <Thead>
                       <Tr>
@@ -207,8 +207,8 @@ export const UpdateImageModal: React.FC<UpdateImageModalProps> = ({
                     No software added
                   </Title>
                   <EmptyStateBody>
-                    Add software to be advertised with your notebook image. Making changes here
-                    won’t affect the contents of the image.{' '}
+                    Add software to be advertised with your image image. Making changes here won’t
+                    affect the contents of the image.{' '}
                   </EmptyStateBody>
                   <Button
                     id="add-software-button"
@@ -235,8 +235,8 @@ export const UpdateImageModal: React.FC<UpdateImageModalProps> = ({
                 <>
                   <TableComposable aria-label="Simple table" variant="compact" isStickyHeader>
                     <Caption>
-                      Change the advertised packages shown with this notebook image. Modifying the
-                      packages here does not effect the contents of the notebook image.
+                      Change the advertised packages shown with this image image. Modifying the
+                      packages here does not effect the contents of the image image.
                     </Caption>
                     <Thead>
                       <Tr>
@@ -287,8 +287,8 @@ export const UpdateImageModal: React.FC<UpdateImageModalProps> = ({
                     No packages added
                   </Title>
                   <EmptyStateBody>
-                    Add packages to be advertised with your notebook image. Making changes here
-                    won’t affect the contents of the image.{' '}
+                    Add packages to be advertised with your image image. Making changes here won’t
+                    affect the contents of the image.{' '}
                   </EmptyStateBody>
                   <Button
                     id="add-package-button"

@@ -31,16 +31,16 @@ import {
   IAction,
 } from '@patternfly/react-table';
 import { CubesIcon, SearchIcon } from '@patternfly/react-icons';
-import { Notebook } from 'types';
+import { BYONImage } from 'types';
 import { ImportImageModal } from './ImportImageModal';
 import { relativeTime } from '../../utilities/time';
 import './NotebookImagesTable.scss';
 import { DeleteImageModal } from './DeleteImageModal';
 import { UpdateImageModal } from './UpdateImageModal';
-import { updateNotebook } from '../../services/notebookImageService';
+import { updateBYONImage } from '../../services/BYONImageService';
 
 export type NotebookImagesTableProps = {
-  notebooks: Notebook[];
+  images: BYONImage[];
   forceUpdate: () => void;
 };
 
@@ -57,15 +57,15 @@ type NotebookTableFilter = {
 };
 
 export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
-  notebooks,
+  images,
   forceUpdate,
 }) => {
-  const rowActions = (notebook: Notebook): IAction[] => [
+  const rowActions = (image: BYONImage): IAction[] => [
     {
       title: 'Edit',
-      id: `${notebook.name}-edit-button`,
+      id: `${image.name}-edit-button`,
       onClick: () => {
-        setCurrentNotebook(notebook);
+        setCurrentNotebook(image);
         setUpdateImageModalVisible(true);
       },
     },
@@ -74,9 +74,9 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
     },
     {
       title: 'Delete',
-      id: `${notebook.name}-delete-button`,
+      id: `${image.name}-delete-button`,
       onClick: () => {
-        setCurrentNotebook(notebook);
+        setCurrentNotebook(image);
         setDeleteImageModalVisible(true);
       },
     },
@@ -84,13 +84,13 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
 
   React.useEffect(() => {
     setNotebookVisible(
-      notebooks.map((notebook) => {
-        return { id: notebook.id, visible: notebook.visible };
+      images.map((image) => {
+        return { id: image.id, visible: image.visible };
       }),
     );
-  }, [notebooks]);
+  }, [images]);
 
-  const [currentNotebook, setCurrentNotebook] = React.useState<Notebook>(notebooks[0]);
+  const [currentNotebook, setCurrentNotebook] = React.useState<BYONImage>(images[0]);
   const [deleteImageModalVisible, setDeleteImageModalVisible] = React.useState<boolean>(false);
   const [importImageModalVisible, setImportImageModalVisible] = React.useState<boolean>(false);
   const [updateImageModalVisible, setUpdateImageModalVisible] = React.useState<boolean>(false);
@@ -102,19 +102,19 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
 
   const getFilterCount = (value: string, option): number => {
     let total = 0;
-    notebooks.forEach((notebook) => {
-      (notebook[option] as string).includes(value) ? total++ : null;
+    images.forEach((image) => {
+      (image[option] as string).includes(value) ? total++ : null;
     });
     return total;
   };
 
-  const getSortableRowValues = (nb: Notebook): string[] => {
+  const getSortableRowValues = (nb: BYONImage): string[] => {
     const { name, description = '', phase = '', visible = false, user = '', uploaded = '' } = nb;
     return [name, description, phase, visible.toString(), user, uploaded.toString()];
   };
 
   if (activeSortIndex !== undefined) {
-    notebooks.sort((a, b) => {
+    images.sort((a, b) => {
       const aValue = getSortableRowValues(a)[activeSortIndex];
       const bValue = getSortableRowValues(b)[activeSortIndex];
 
@@ -148,18 +148,18 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
   const currentTimeStamp: number = Date.now();
 
   const [expandedNotebookIDs, setExpandedNotebookIDs] = React.useState<string[]>([]);
-  const setNotebookExpanded = (notebook: Notebook, isExpanding = true) => {
+  const setNotebookExpanded = (image: BYONImage, isExpanding = true) => {
     setExpandedNotebookIDs((prevExpanded) => {
-      const otherExpandedRepoNames = prevExpanded.filter((r) => r !== notebook.id);
-      return isExpanding ? [...otherExpandedRepoNames, notebook.id] : otherExpandedRepoNames;
+      const otherExpandedRepoNames = prevExpanded.filter((r) => r !== image.id);
+      return isExpanding ? [...otherExpandedRepoNames, image.id] : otherExpandedRepoNames;
     });
   };
-  const isNotebookExpanded = (notebook: Notebook) => {
-    return expandedNotebookIDs.includes(notebook.id);
+  const isNotebookExpanded = (image: BYONImage) => {
+    return expandedNotebookIDs.includes(image.id);
   };
   const [notebookVisible, setNotebookVisible] = React.useState<NotebookEnabled[]>(
-    notebooks.map((notebook) => {
-      return { id: notebook.id, visible: notebook.visible };
+    images.map((image) => {
+      return { id: image.id, visible: image.visible };
     }),
   );
 
@@ -180,7 +180,7 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
   const [tableFilter, setTableFilter] = React.useState<NotebookTableFilter>({
     filter: '',
     option: 'name',
-    count: notebooks.length,
+    count: images.length,
   });
   const [selected, setSelected] = React.useState<string>('name');
   const [tableSelectIsOpen, setTableSelectIsOpen] = React.useState<boolean>(false);
@@ -191,7 +191,7 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
         <Select
           id="search-filter-select"
           variant={SelectVariant.single}
-          aria-label="Select for notebook images table"
+          aria-label="Select for image images table"
           onToggle={(isExpanded) => {
             setTableSelectIsOpen(isExpanded);
           }}
@@ -214,7 +214,7 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
         <SearchInput
           id="search-filter-input"
           className="filter-search"
-          aria-label="search input for notebook images table"
+          aria-label="search input for image images table"
           value={tableFilter.filter}
           onChange={(value) => {
             const newCount = getFilterCount(value, tableFilter.option);
@@ -228,7 +228,7 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
             setTableFilter({
               filter: '',
               option: tableFilter.option,
-              count: notebooks.length,
+              count: images.length,
             });
           }}
         />
@@ -246,23 +246,23 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
     </React.Fragment>
   );
 
-  const applyTableFilter = (notebook: Notebook): boolean => {
+  const applyTableFilter = (image: BYONImage): boolean => {
     if (
       tableFilter.filter !== '' &&
-      notebook[tableFilter.option] &&
+      image[tableFilter.option] &&
       tableFilter.option !== 'uploaded'
     ) {
-      const notebookValue: string = notebook[tableFilter.option] as string;
+      const notebookValue: string = image[tableFilter.option] as string;
       return !notebookValue.includes(tableFilter.filter);
     }
     if (
       tableFilter.filter !== '' &&
-      notebook[tableFilter.option] &&
+      image[tableFilter.option] &&
       tableFilter.option === 'uploaded'
     ) {
       const notebookValue: string = relativeTime(
         currentTimeStamp,
-        new Date(notebook.uploaded as Date).getTime(),
+        new Date(image.uploaded as Date).getTime(),
       );
       return !notebookValue.includes(tableFilter.filter);
     }
@@ -271,7 +271,7 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
   return (
     <React.Fragment>
       <DeleteImageModal
-        notebook={currentNotebook}
+        image={currentNotebook}
         isOpen={deleteImageModalVisible}
         onDeleteHandler={forceUpdate}
         onCloseHandler={() => {
@@ -286,7 +286,7 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
         onImportHandler={forceUpdate}
       />
       <UpdateImageModal
-        notebook={currentNotebook}
+        image={currentNotebook}
         isOpen={updateImageModalVisible}
         onUpdateHandler={forceUpdate}
         onCloseHandler={() => {
@@ -313,42 +313,42 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
           </Tr>
         </Thead>
         {tableFilter.count > 0 ? (
-          notebooks.map((notebook, rowIndex) => {
+          images.map((image, rowIndex) => {
             const packages: any = [];
-            notebook.packages?.forEach((nbpackage) => {
+            image.packages?.forEach((nbpackage) => {
               packages.push(<p>{`${nbpackage.name} ${nbpackage.version}`}</p>);
             });
             return (
-              <Tbody key={notebook.name} isExpanded={isNotebookExpanded(notebook)}>
-                <Tr isHidden={applyTableFilter(notebook)}>
+              <Tbody key={image.name} isExpanded={isNotebookExpanded(image)}>
+                <Tr isHidden={applyTableFilter(image)}>
                   <Td
                     expand={{
                       rowIndex,
-                      isExpanded: isNotebookExpanded(notebook),
-                      onToggle: () => setNotebookExpanded(notebook, !isNotebookExpanded(notebook)),
+                      isExpanded: isNotebookExpanded(image),
+                      onToggle: () => setNotebookExpanded(image, !isNotebookExpanded(image)),
                     }}
                   />
-                  <Td dataLabel={columnNames.name}>{notebook.name}</Td>
-                  <Td dataLabel={columnNames.description}>{notebook.description}</Td>
+                  <Td dataLabel={columnNames.name}>{image.name}</Td>
+                  <Td dataLabel={columnNames.description}>{image.description}</Td>
                   <Td>
                     <Switch
                       className="enable-switch"
-                      aria-label={`Enable Switch ${notebook.name}`}
-                      id={`enabled-disable-${notebook.id}`}
+                      aria-label={`Enable Switch ${image.name}`}
+                      id={`enabled-disable-${image.id}`}
                       isChecked={
                         notebookVisible.find((value) => {
-                          return notebook.id === value.id;
+                          return image.id === value.id;
                         })?.visible
                       }
                       onChange={() => {
-                        updateNotebook({
-                          id: notebook.id,
-                          visible: !notebook.visible,
-                          packages: notebook.packages,
+                        updateBYONImage({
+                          id: image.id,
+                          visible: !image.visible,
+                          packages: image.packages,
                         });
                         setNotebookVisible(
                           notebookVisible.map((value) =>
-                            notebook.id === value.id
+                            image.id === value.id
                               ? { id: value.id, visible: !value.visible }
                               : value,
                           ),
@@ -356,15 +356,15 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
                       }}
                     />
                   </Td>
-                  <Td dataLabel={columnNames.user}>{notebook.user}</Td>
+                  <Td dataLabel={columnNames.user}>{image.user}</Td>
                   <Td dataLabel={columnNames.uploaded}>
-                    {relativeTime(currentTimeStamp, new Date(notebook.uploaded as Date).getTime())}
+                    {relativeTime(currentTimeStamp, new Date(image.uploaded as Date).getTime())}
                   </Td>
                   <Td isActionCell>
-                    <ActionsColumn items={rowActions(notebook)} />
+                    <ActionsColumn items={rowActions(image)} />
                   </Td>
                 </Tr>
-                <Tr isHidden={applyTableFilter(notebook)} isExpanded={isNotebookExpanded(notebook)}>
+                <Tr isHidden={applyTableFilter(image)} isExpanded={isNotebookExpanded(image)}>
                   <Td dataLabel="Package Details" colSpan={Object.entries(columnNames).length}>
                     {packages.length > 0 ? (
                       <ExpandableRowContent>
@@ -404,7 +404,7 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
                         setTableFilter({
                           filter: '',
                           option: tableFilter.option,
-                          count: notebooks.length,
+                          count: images.length,
                         });
                       }}
                     >

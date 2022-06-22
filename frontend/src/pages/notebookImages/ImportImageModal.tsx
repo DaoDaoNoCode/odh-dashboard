@@ -16,10 +16,10 @@ import {
   TabTitleText,
 } from '@patternfly/react-core';
 import { Caption, TableComposable, Tbody, Thead, Th, Tr } from '@patternfly/react-table';
-import { importNotebook } from '../../services/notebookImageService';
+import { importBYONImage } from '../../services/BYONImageService';
 import { State } from '../../redux/types';
 import { useSelector } from 'react-redux';
-import { ResponseStatus, NotebookPackage } from 'types';
+import { ResponseStatus, BYONImagePackage } from 'types';
 import { EditStepTableRow } from './EditStepTableRow';
 import { CubesIcon, ExclamationCircleIcon, PlusCircleIcon } from '@patternfly/react-icons';
 import './ImportImageModal.scss';
@@ -39,8 +39,8 @@ export const ImportImageModal: React.FC<ImportImageModalProps> = ({
   const [repository, setRepository] = React.useState<string>('');
   const [name, setName] = React.useState<string>('');
   const [description, setDescription] = React.useState<string>('');
-  const [software, setSoftware] = React.useState<NotebookPackage[]>([]);
-  const [packages, setPackages] = React.useState<NotebookPackage[]>([]);
+  const [software, setSoftware] = React.useState<BYONImagePackage[]>([]);
+  const [packages, setPackages] = React.useState<BYONImagePackage[]>([]);
   const [activeTabKey, setActiveTabKey] = React.useState<number>(0);
   const [validName, setValidName] = React.useState<boolean>(true);
   const [validRepo, setValidRepo] = React.useState<boolean>(true);
@@ -71,7 +71,7 @@ export const ImportImageModal: React.FC<ImportImageModalProps> = ({
           variant="primary"
           onClick={() => {
             if (name.length > 0 && repository.length > 0) {
-              importNotebook({
+              importBYONImage({
                 name: name,
                 url: repository,
                 description: description,

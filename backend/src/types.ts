@@ -333,68 +333,46 @@ export type ODHSegmentKey = {
   segmentKey: string;
 };
 
-export type NotebookImageError = {
+export type BYONImageError = {
   severity: string;
   message: string;
 };
 
-export type NotebookImageStatus = 'Importing' | 'Validating' | 'Succeeded' | 'Failed';
+export type BYONImageStatus = 'Importing' | 'Validating' | 'Succeeded' | 'Failed';
 
-export type NotebookImage = {
+export type BYONImage = {
   id: string;
-  phase?: NotebookImageStatus;
+  phase?: BYONImageStatus;
   user?: string;
   uploaded?: Date;
-  error?: NotebookImageError;
-} & NotebookImageCreateRequest &
-  NotebookImageUpdateRequest;
+  error?: BYONImageError;
+} & BYONImageCreateRequest &
+  BYONImageUpdateRequest;
 
-export type NotebookImageCreateRequest = {
+export type BYONImageCreateRequest = {
   name: string;
   url: string;
   description?: string;
   // FIXME: This shouldn't be a user defined value consumed from the request payload but should be a controlled value from an authentication middleware.
   user: string;
-  software?: NotebookImagePackage[];
-  packages?: NotebookImagePackage[];
+  software?: BYONImagePackage[];
+  packages?: BYONImagePackage[];
 };
 
-export type NotebookImageUpdateRequest = {
+export type BYONImageUpdateRequest = {
   id: string;
   name?: string;
   description?: string;
   visible?: boolean;
-  software?: NotebookImagePackage[];
-  packages?: NotebookImagePackage[];
+  software?: BYONImagePackage[];
+  packages?: BYONImagePackage[];
 };
 
-export type NotebookImagePackage = {
+export type BYONImagePackage = {
   name: string;
   version: string;
   visible: boolean;
 };
-
-export type ImageStreamTagSpec = {
-  name: string;
-  annotations?: { [key: string]: string };
-  from?: {
-    kind: string;
-    name: string;
-  };
-};
-export type ImageStreamKind = {
-  spec?: {
-    lookupPolicy?: {
-      local: boolean;
-    };
-    tags: ImageStreamTagSpec[];
-  };
-  status?: any;
-} & K8sResourceCommon;
-
-export type ImageStreamListKind = {
-  items: ImageStreamKind[];
-} & K8sResourceBase;
 
 export type PipelineRunKind = {
   spec: {
@@ -470,8 +448,8 @@ export type ImageStream = {
     };
     tags?: ImageStreamTag[];
   };
-  status: ImageStreamStatus;
-};
+  status?: ImageStreamStatus;
+} & K8sResourceCommon;
 
 export type ImageStreamList = {
   apiVersion?: string;

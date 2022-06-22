@@ -13,7 +13,7 @@ import {
   Title,
 } from '@patternfly/react-core';
 import ApplicationsPage from '../ApplicationsPage';
-import { useWatchNotebookImages } from '../../utilities/useWatchNotebookImages';
+import { useWatchBYONImages } from '../../utilities/useWatchBYONImages';
 import { PlusCircleIcon } from '@patternfly/react-icons';
 import { ImportImageModal } from './ImportImageModal';
 import { NotebookImagesTable } from './NotebookImagesTable';
@@ -23,8 +23,8 @@ const description = `Import, delete, and modify notebook images.`;
 const NotebookImages: React.FC = () => {
   const [importImageModalVisible, setImportImageModalVisible] = React.useState<boolean>(false);
 
-  const { notebooks, loaded, loadError, forceUpdate } = useWatchNotebookImages();
-  const isEmpty = !notebooks || notebooks.length === 0;
+  const { images, loaded, loadError, forceUpdate } = useWatchBYONImages();
+  const isEmpty = !images || images.length === 0;
 
   const noNotebooksPageSection = (
     <PageSection isFilled>
@@ -69,7 +69,7 @@ const NotebookImages: React.FC = () => {
             <Flex direction={{ default: 'column' }}>
               <FlexItem>
                 {' '}
-                <NotebookImagesTable notebooks={notebooks} forceUpdate={forceUpdate} />
+                <NotebookImagesTable images={images} forceUpdate={forceUpdate} />
               </FlexItem>
             </Flex>
           </PageSection>
