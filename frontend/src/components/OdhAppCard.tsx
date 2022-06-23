@@ -188,6 +188,7 @@ const OdhAppCard: React.FC<OdhAppCardProps> = ({ odhApp }) => {
   return (
     <Card
       id={odhApp.metadata.name}
+      role="article"
       isHoverable={!disabled}
       className={cardClasses}
       isSelected={selected}
