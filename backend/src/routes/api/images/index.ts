@@ -1,26 +1,11 @@
-// import { KubeFastifyInstance } from '../../../types';
-// import { FastifyReply, FastifyRequest } from 'fastify';
-// import { listImageStreams } from './imageUtils';
-
-// module.exports = async (fastify: KubeFastifyInstance) => {
-//   fastify.get('/', async (request: FastifyRequest, reply: FastifyReply) => {
-//     return listImageStreams()
-//       .then((res) => {
-//         return res;
-//       })
-//       .catch((res) => {
-//         reply.send(res);
-//       });
-//   });
-// };
-
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { ImageType } from '../../../types';
 import { postImage, deleteImage, getImageList, updateImage } from './imageUtils';
 
 export default async (fastify: FastifyInstance): Promise<void> => {
   fastify.get('/:type', async (request: FastifyRequest, reply: FastifyReply) => {
     let labels = {};
-    const params = request.params as { type: string };
+    const params = request.params as { type: ImageType };
     if (params.type === 'byon') {
       labels = {
         'app.kubernetes.io/created-by': 'byon',

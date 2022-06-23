@@ -484,3 +484,5 @@ export type ImageInfo = {
   default?: boolean;
   order?: number;
 };
+
+export type ImageType = 'byon' | 'jupyter' | 'other';

@@ -35,37 +35,34 @@ import { BYONImage } from 'types';
 import { ImportImageModal } from './ImportImageModal';
 import { relativeTime } from '../../utilities/time';
 import './NotebookImagesTable.scss';
-import { DeleteImageModal } from './DeleteImageModal';
+import { DeleteImageModal } from './DeleteBYONImageModal';
 import { UpdateImageModal } from './UpdateImageModal';
 import { updateBYONImage } from '../../services/BYONImageService';
 
-export type NotebookImagesTableProps = {
+export type BYONImagesTableProps = {
   images: BYONImage[];
   forceUpdate: () => void;
 };
 
-type NotebookEnabled = {
+type BYONImageEnabled = {
   id: string;
   visible?: boolean;
 };
 
-type NotebookTableFilterOptions = 'user' | 'name' | 'description' | 'phase' | 'user' | 'uploaded';
-type NotebookTableFilter = {
+type BYONImageTableFilterOptions = 'user' | 'name' | 'description' | 'phase' | 'user' | 'uploaded';
+type BYONImageTableFilter = {
   filter: string;
-  option: NotebookTableFilterOptions;
+  option: BYONImageTableFilterOptions;
   count: number;
 };
 
-export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
-  images,
-  forceUpdate,
-}) => {
+export const BYONImagesTable: React.FC<BYONImagesTableProps> = ({ images, forceUpdate }) => {
   const rowActions = (image: BYONImage): IAction[] => [
     {
       title: 'Edit',
       id: `${image.name}-edit-button`,
       onClick: () => {
-        setCurrentNotebook(image);
+        setcurrentImage(image);
         setUpdateImageModalVisible(true);
       },
     },
@@ -76,21 +73,21 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
       title: 'Delete',
       id: `${image.name}-delete-button`,
       onClick: () => {
-        setCurrentNotebook(image);
+        setcurrentImage(image);
         setDeleteImageModalVisible(true);
       },
     },
   ];
 
   React.useEffect(() => {
-    setNotebookVisible(
+    setBYONImageVisible(
       images.map((image) => {
         return { id: image.id, visible: image.visible };
       }),
     );
   }, [images]);
 
-  const [currentNotebook, setCurrentNotebook] = React.useState<BYONImage>(images[0]);
+  const [currentImage, setcurrentImage] = React.useState<BYONImage>(images[0]);
   const [deleteImageModalVisible, setDeleteImageModalVisible] = React.useState<boolean>(false);
   const [importImageModalVisible, setImportImageModalVisible] = React.useState<boolean>(false);
   const [updateImageModalVisible, setUpdateImageModalVisible] = React.useState<boolean>(false);
@@ -147,17 +144,17 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
 
   const currentTimeStamp: number = Date.now();
 
-  const [expandedNotebookIDs, setExpandedNotebookIDs] = React.useState<string[]>([]);
-  const setNotebookExpanded = (image: BYONImage, isExpanding = true) => {
-    setExpandedNotebookIDs((prevExpanded) => {
+  const [expandedBYONImageIDs, setExpandedBYONImageIDs] = React.useState<string[]>([]);
+  const setBYONImageExpanded = (image: BYONImage, isExpanding = true) => {
+    setExpandedBYONImageIDs((prevExpanded) => {
       const otherExpandedRepoNames = prevExpanded.filter((r) => r !== image.id);
       return isExpanding ? [...otherExpandedRepoNames, image.id] : otherExpandedRepoNames;
     });
   };
-  const isNotebookExpanded = (image: BYONImage) => {
-    return expandedNotebookIDs.includes(image.id);
+  const isBYONImageExpanded = (image: BYONImage) => {
+    return expandedBYONImageIDs.includes(image.id);
   };
-  const [notebookVisible, setNotebookVisible] = React.useState<NotebookEnabled[]>(
+  const [BYONImageVisible, setBYONImageVisible] = React.useState<BYONImageEnabled[]>(
     images.map((image) => {
       return { id: image.id, visible: image.visible };
     }),
@@ -177,7 +174,7 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
       Uploaded
     </SelectOption>,
   ];
-  const [tableFilter, setTableFilter] = React.useState<NotebookTableFilter>({
+  const [tableFilter, setTableFilter] = React.useState<BYONImageTableFilter>({
     filter: '',
     option: 'name',
     count: images.length,
@@ -200,7 +197,7 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
             const newCount = getFilterCount(tableFilter.filter, value);
             setTableFilter({
               filter: tableFilter.filter,
-              option: value as NotebookTableFilterOptions,
+              option: value as BYONImageTableFilterOptions,
               count: newCount,
             });
           }}
@@ -252,26 +249,26 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
       image[tableFilter.option] &&
       tableFilter.option !== 'uploaded'
     ) {
-      const notebookValue: string = image[tableFilter.option] as string;
-      return !notebookValue.includes(tableFilter.filter);
+      const BYONImageValue: string = image[tableFilter.option] as string;
+      return !BYONImageValue.includes(tableFilter.filter);
     }
     if (
       tableFilter.filter !== '' &&
       image[tableFilter.option] &&
       tableFilter.option === 'uploaded'
     ) {
-      const notebookValue: string = relativeTime(
+      const BYONImageValue: string = relativeTime(
         currentTimeStamp,
         new Date(image.uploaded as Date).getTime(),
       );
-      return !notebookValue.includes(tableFilter.filter);
+      return !BYONImageValue.includes(tableFilter.filter);
     }
     return false;
   };
   return (
     <React.Fragment>
       <DeleteImageModal
-        image={currentNotebook}
+        image={currentImage}
         isOpen={deleteImageModalVisible}
         onDeleteHandler={forceUpdate}
         onCloseHandler={() => {
@@ -286,7 +283,7 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
         onImportHandler={forceUpdate}
       />
       <UpdateImageModal
-        image={currentNotebook}
+        image={currentImage}
         isOpen={updateImageModalVisible}
         onUpdateHandler={forceUpdate}
         onCloseHandler={() => {
@@ -298,7 +295,7 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
       </Toolbar>
       <TableComposable
         className={tableFilter.count === 0 ? 'empty-table' : ''}
-        aria-label="Notebook Images table"
+        aria-label="BYON Images table"
         variant="compact"
       >
         <Thead>
@@ -319,13 +316,13 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
               packages.push(<p>{`${nbpackage.name} ${nbpackage.version}`}</p>);
             });
             return (
-              <Tbody key={image.name} isExpanded={isNotebookExpanded(image)}>
+              <Tbody key={image.name} isExpanded={isBYONImageExpanded(image)}>
                 <Tr isHidden={applyTableFilter(image)}>
                   <Td
                     expand={{
                       rowIndex,
-                      isExpanded: isNotebookExpanded(image),
-                      onToggle: () => setNotebookExpanded(image, !isNotebookExpanded(image)),
+                      isExpanded: isBYONImageExpanded(image),
+                      onToggle: () => setBYONImageExpanded(image, !isBYONImageExpanded(image)),
                     }}
                   />
                   <Td dataLabel={columnNames.name}>{image.name}</Td>
@@ -336,7 +333,7 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
                       aria-label={`Enable Switch ${image.name}`}
                       id={`enabled-disable-${image.id}`}
                       isChecked={
-                        notebookVisible.find((value) => {
+                        BYONImageVisible.find((value) => {
                           return image.id === value.id;
                         })?.visible
                       }
@@ -346,8 +343,8 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
                           visible: !image.visible,
                           packages: image.packages,
                         });
-                        setNotebookVisible(
-                          notebookVisible.map((value) =>
+                        setBYONImageVisible(
+                          BYONImageVisible.map((value) =>
                             image.id === value.id
                               ? { id: value.id, visible: !value.visible }
                               : value,
@@ -364,7 +361,7 @@ export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
                     <ActionsColumn items={rowActions(image)} />
                   </Td>
                 </Tr>
-                <Tr isHidden={applyTableFilter(image)} isExpanded={isNotebookExpanded(image)}>
+                <Tr isHidden={applyTableFilter(image)} isExpanded={isBYONImageExpanded(image)}>
                   <Td dataLabel="Package Details" colSpan={Object.entries(columnNames).length}>
                     {packages.length > 0 ? (
                       <ExpandableRowContent>

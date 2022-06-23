@@ -3,11 +3,12 @@ import {
   BYONImage,
   BYONImageCreateRequest,
   BYONImageUpdateRequest,
+  ImageType,
   ResponseStatus,
 } from '../types';
 
 //BYON Specific functions
-export const fetchBYONImages = (type: string): Promise<BYONImage[]> => {
+export const fetchBYONImages = (type: ImageType): Promise<BYONImage[]> => {
   const url = `/api/images/${type}`;
   return axios
     .get(url)
