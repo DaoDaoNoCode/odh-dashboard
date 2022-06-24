@@ -10,7 +10,7 @@ import {
   Select,
   SelectOption,
 } from '@patternfly/react-core';
-import { checkImageStreamOrder } from '../../utilities/imageUtils';
+import { checkImageStreamOrder, getDefaultTagByImageStream, isImageStreamTagBuildValid } from '../../utilities/imageUtils';
 import {
   EnvVarCategoryType,
   ImageStream,
@@ -23,17 +23,26 @@ import EnvironmentVariablesRow from './EnvironmentVariablesRow';
 import { mockUIConfig } from './mock';
 import { CUSTOM_VARIABLE, EMPTY_KEY } from './const';
 import { PlusCircleIcon } from '@patternfly/react-icons';
+import { useHistory } from 'react-router';
+import { createNotebook } from 'services/notebookService';
+import { createPvc, getPvc } from 'services/pvcService';
+import { useSelector } from 'react-redux';
+import { State } from 'redux/types';
+import { generateNotebookNameFromUsername, generatePvcNameFromUsername } from 'utilities/utils';
+import AppContext from 'app/AppContext';
 
 import './NotebookController.scss';
-import { useHistory } from 'react-router';
+import StartServerModal from './StartServerModal';
 
 type SpawnerPageProps = {
   imageStreams: ImageStream[];
   odhConfig: any;
+  updateNotebook: () => void;
 };
 
-const SpawnerPage: React.FC<SpawnerPageProps> = React.memo(({ imageStreams, odhConfig }) => {
+const SpawnerPage: React.FC<SpawnerPageProps> = React.memo(({ imageStreams, odhConfig, updateNotebook }) => {
   const history = useHistory();
+  const { buildStatuses } = React.useContext(AppContext);
   const [selectedImageTag, setSelectedImageTag] = React.useState<ImageStreamAndTag>({
     imageStream: undefined,
     tag: undefined,
@@ -43,6 +52,28 @@ const SpawnerPage: React.FC<SpawnerPageProps> = React.memo(({ imageStreams, odhC
   const [gpuDropdownOpen, setGpuDropdownOpen] = React.useState(false);
   const [selectedGpu, setSelectedGpu] = React.useState<string>('0');
   const [variableRows, setVariableRows] = React.useState<VariableRow[]>([]);
+  const [startShown, setStartShown] = React.useState<boolean>(false);
+  const username = useSelector<State, string>((state) => state.appState.user || '');
+
+  React.useEffect(() => {
+    setFirstValidImage();
+  }, [imageStreams])
+
+  const setFirstValidImage = () => {
+    let found = false;
+    let i = 0;
+    while (!found && i < imageStreams.length) {
+      const imageStream = imageStreams[i++];
+      if (imageStream) {
+        const tag = getDefaultTagByImageStream(imageStream);
+        if (tag && isImageStreamTagBuildValid(buildStatuses, imageStream, tag)) {
+          const values = { imageStream: imageStream, tag: tag };
+          setSelectedImageTag(values);
+          found = true;
+        }
+      }
+    }
+  };
 
   const handleImageTagSelection = (
     imageStream: ImageStream,
@@ -146,73 +177,109 @@ const SpawnerPage: React.FC<SpawnerPageProps> = React.memo(({ imageStreams, odhC
     setVariableRows([...variableRows, newRow]);
   };
 
+  const handleNotebookAction = async () => {
+    //setStartShown(true);
+    const { imageStream, tag } = selectedImageTag;
+    if (!imageStream || !tag) {
+      // change to alert
+      console.error('no image selected');
+      return;
+    }
+
+    const notebookSize = odhConfig?.spec?.notebookSizes?.find((ns) => ns.name === selectedSize);
+    try {
+      const pvcName = generatePvcNameFromUsername(username);
+      const pvc = await getPvc(pvcName);
+      if (!pvc) {
+        await createPvc(pvcName, '20Gi');
+      }
+      const volumes = [{ name: pvcName, persistentVolumeClaim: { claimName: pvcName }}];
+      const volumeMounts = [{ mountPath: '/home/jovyan', name: pvcName }];
+      const notebookName = generateNotebookNameFromUsername(username);
+      await createNotebook(
+        notebookName,
+        tag,
+        notebookSize,
+        parseInt(selectedGpu),
+        volumes,
+        volumeMounts
+      );
+      updateNotebook();
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   return (
-    <Form className="odh-notebook-controller__page-form">
-      <FormSection title="Notebook image">
-        <FormGroup fieldId="modal-notebook-image">
-          <Grid sm={12} md={6} lg={6} xl={6} xl2={6} hasGutter>
-            {imageStreams.sort(checkImageStreamOrder).map((imageStream) => (
-              <GridItem key={imageStream.metadata.name}>
-                <ImageStreamSelector
-                  imageStream={imageStream}
-                  selectedImage={selectedImageTag.imageStream}
-                  selectedTag={selectedImageTag.tag}
-                  handleSelection={handleImageTagSelection}
-                />
-              </GridItem>
-            ))}
-          </Grid>
-        </FormGroup>
-      </FormSection>
-      <FormSection title="Deployment size">
-        {sizeOptions && (
-          <FormGroup label="Container size" fieldId="modal-notebook-container-size">
-            <Select
-              isOpen={sizeDropdownOpen}
-              onToggle={() => setSizeDropdownOpen(!sizeDropdownOpen)}
-              aria-labelledby="container-size"
-              selections={selectedSize}
-              onSelect={handleSizeSelection}
-              menuAppendTo="parent"
-            >
-              {sizeOptions}
-            </Select>
+    <>
+      <Form className="odh-notebook-controller__page odh-notebook-controller__page-form">
+        <FormSection title="Notebook image">
+          <FormGroup fieldId="modal-notebook-image">
+            <Grid sm={12} md={12} lg={12} xl={6} xl2={6} hasGutter>
+              {imageStreams.sort(checkImageStreamOrder).map((imageStream) => (
+                <GridItem key={imageStream.metadata.name}>
+                  <ImageStreamSelector
+                    imageStream={imageStream}
+                    selectedImage={selectedImageTag.imageStream}
+                    selectedTag={selectedImageTag.tag}
+                    handleSelection={handleImageTagSelection}
+                  />
+                </GridItem>
+              ))}
+            </Grid>
           </FormGroup>
-        )}
-        {gpuOptions && (
-          <FormGroup label="Number of GPUs" fieldId="modal-notebook-gpu-number">
-            <Select
-              isOpen={gpuDropdownOpen}
-              onToggle={() => setGpuDropdownOpen(!gpuDropdownOpen)}
-              aria-labelledby="gpu-numbers"
-              selections={selectedGpu}
-              onSelect={handleGpuSelection}
-              menuAppendTo="parent"
-            >
-              {gpuOptions}
-            </Select>
-          </FormGroup>
-        )}
-      </FormSection>
-      <FormSection title="Environment variables" className="odh-notebook-controller__env-var">
-        {renderEnvironmentVariableRows()}
-        <Button
-          className="odh-notebook-controller__env-var-add-button"
-          isInline
-          variant="link"
-          onClick={addEnvironmentVariableRow}
-        >
-          <PlusCircleIcon />
-          {` Add more variables`}
-        </Button>
-      </FormSection>
-      <ActionGroup>
-        <Button variant="primary">Start server</Button>
-        <Button variant="secondary" onClick={() => history.push('/')}>
-          Cancel
-        </Button>
-      </ActionGroup>
-    </Form>
+        </FormSection>
+        <FormSection title="Deployment size">
+          {sizeOptions && (
+            <FormGroup label="Container size" fieldId="modal-notebook-container-size">
+              <Select
+                isOpen={sizeDropdownOpen}
+                onToggle={() => setSizeDropdownOpen(!sizeDropdownOpen)}
+                aria-labelledby="container-size"
+                selections={selectedSize}
+                onSelect={handleSizeSelection}
+                menuAppendTo="parent"
+              >
+                {sizeOptions}
+              </Select>
+            </FormGroup>
+          )}
+          {gpuOptions && (
+            <FormGroup label="Number of GPUs" fieldId="modal-notebook-gpu-number">
+              <Select
+                isOpen={gpuDropdownOpen}
+                onToggle={() => setGpuDropdownOpen(!gpuDropdownOpen)}
+                aria-labelledby="gpu-numbers"
+                selections={selectedGpu}
+                onSelect={handleGpuSelection}
+                menuAppendTo="parent"
+              >
+                {gpuOptions}
+              </Select>
+            </FormGroup>
+          )}
+        </FormSection>
+        <FormSection title="Environment variables" className="odh-notebook-controller__env-var">
+          {renderEnvironmentVariableRows()}
+          <Button
+            className="odh-notebook-controller__env-var-add-button"
+            isInline
+            variant="link"
+            onClick={addEnvironmentVariableRow}
+          >
+            <PlusCircleIcon />
+            {` Add more variables`}
+          </Button>
+        </FormSection>
+        <ActionGroup>
+          <Button variant="primary" onClick={handleNotebookAction}>Start server</Button>
+          <Button variant="secondary" onClick={() => history.push('/')}>
+            Cancel
+          </Button>
+        </ActionGroup>
+      </Form>
+      {startShown && <StartServerModal startShown={startShown} onClose={() => setStartShown(false)}/>}
+    </>
   );
 });
 

@@ -1,5 +1,7 @@
 import compareVersions from 'compare-versions';
 import {
+  BuildStatus,
+  BUILD_PHASE,
   Container,
   ImageSoftwareType,
   ImageStream,
@@ -18,8 +20,11 @@ import {
   LIMIT_NOTEBOOK_IMAGE_GPU,
 } from './const';
 
-const runningStatuses = ['pending', 'running', 'cancelled'];
-const failedStatuses = ['error', 'failed'];
+const runningStatuses = ['Pending', 'Running', 'Cancelled'];
+const failedStatuses = ['Error', 'Failed'];
+
+const PENDING_PHASES = [BUILD_PHASE.new, BUILD_PHASE.pending, BUILD_PHASE.running, BUILD_PHASE.cancelled];
+const FAILED_PHASES = [BUILD_PHASE.error, BUILD_PHASE.failed];
 
 export const compareTagVersions = (a: ImageStreamTag, b: ImageStreamTag): number => {
   if (compareVersions.validate(a.name) && compareVersions.validate(b.name)) {
@@ -35,10 +40,15 @@ export const isImageBuildInProgress = (image: ImageType): boolean => {
   return !!inProgressTag;
 };
 
-export const isImageTagBuildValid = (tag: ImageTagType): boolean => {
+export const isImageStreamTagBuildValid = (buildStatuses: BuildStatus[], imageStream: ImageStream, tag: ImageStreamTag): boolean => {
+  const imageStreamTag = `${imageStream.metadata.name}:${tag.name}`;
+  const build = buildStatuses.find(buildStatus => buildStatus.imageStreamTag === imageStreamTag);
+  if (!build) {
+    return true;
+  };
   return (
-    !runningStatuses.includes(tag.build_status?.toLowerCase() ?? '') &&
-    !failedStatuses.includes(tag.build_status?.toLowerCase() ?? '')
+    !PENDING_PHASES.includes(build.status) &&
+    !failedStatuses.includes(build.status)
   );
 };
 
@@ -92,9 +102,12 @@ export const getImageStreamTagVersion = (
   return '';
 };
 
-export const checkImageStreamOrder = (a: ImageStream, b: ImageStream): number =>
-  Number(a.metadata.annotations?.[ANNOTATION_NOTEBOOK_IMAGE_ORDER]) -
-  Number(b.metadata.annotations?.[ANNOTATION_NOTEBOOK_IMAGE_ORDER]);
+export const checkImageStreamOrder = (a: ImageStream, b: ImageStream): number => {
+  const aOrder = Number(a.metadata.annotations?.[ANNOTATION_NOTEBOOK_IMAGE_ORDER] ?? 100);
+  const bOrder = Number(b.metadata.annotations?.[ANNOTATION_NOTEBOOK_IMAGE_ORDER] ?? 100);
+  return aOrder - bOrder;
+}
+  
 
 export const getTagDescription = (tag?: ImageStreamTag): string => {
   const software = tag?.annotations?.[ANNOTATION_NOTEBOOK_IMAGE_TAG_SOFTWARE];
@@ -124,13 +137,13 @@ export const getImageStreamByContainer = (
   container?: Container,
 ): ImageStream | undefined =>
   imageStreams.find((imageStream) =>
-    imageStream.spec?.tags?.find((tag) => tag.from?.name === container?.image),
+    imageStream.spec.tags?.find((tag) => tag.from?.name === container?.image),
   );
 
 export const getTagByTagNameAndImageStream = (
   imageStream: ImageStream,
   tagName: string,
-): ImageStreamTag | undefined => imageStream.spec?.tags?.find((tag) => tag.name === tagName);
+): ImageStreamTag | undefined => imageStream.spec.tags?.find((tag) => tag.name === tagName);
 
 export const getTagsByStatusTags = (
   imageStream: ImageStream,

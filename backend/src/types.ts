@@ -66,6 +66,13 @@ export enum BUILD_PHASE {
 }
 
 export type BuildKind = {
+  spec: {
+    output: {
+      to: {
+        name: string;
+      }
+    }
+  }
   status: {
     phase: BUILD_PHASE;
     completionTimestamp: string;
@@ -258,6 +265,11 @@ export type NotebookResources = {
     cpu?: string;
     memory?: string;
   };
+};
+
+export type NotebookSize = {
+  name: string;
+  resources: NotebookResources;
 };
 
 export type NotebookPort = {
@@ -486,3 +498,31 @@ export type ImageInfo = {
 };
 
 export type ImageType = 'byon' | 'jupyter' | 'other';
+
+export type PersistentVolumeClaimKind = {
+  apiVersion?: string;
+  kind?: string;
+  metadata: {
+    name: string;
+    namespace?: string;
+    annotations?: { [key: string]: string };
+  };
+  spec: {
+    accessModes: string[];
+    resources: {
+      requests: {
+        storage: string;
+      };
+    };
+    storageClassName?: string;
+    volumeMode: 'Filesystem' | 'Block';
+  };
+  status?: Record<string, any>;
+};
+
+export type PersistentVolumeClaimListKind = {
+  apiVersion?: string;
+  kind?: string;
+  metadata: Record<string, unknown>;
+  items: PersistentVolumeClaimKind[];
+};

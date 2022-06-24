@@ -8,9 +8,45 @@ import {
   Text,
   TextVariants,
 } from '@patternfly/react-core';
+import { Container, ImageStream, Notebook, NotebookContainer } from '../../types';
+import { getImageStreamByContainer, getNameVersionString, getNumGpus, getTagDependencies, getTagDescription } from 'utilities/imageUtils';
 
-const NotebookServerDetails: React.FC = () => {
+type NotebookServerDetailsProps = {
+  notebook: Notebook;
+  imageStreams: ImageStream[];
+}
+
+const NotebookServerDetails: React.FC<NotebookServerDetailsProps> = ({
+  notebook,
+  imageStreams
+}) => {
   const [isExpanded, setExpanded] = React.useState(false);
+
+  const empty = React.useCallback(
+    () => (
+      <div>Error load notebook details</div>
+    ),
+    [notebook]
+  );
+
+  const container: NotebookContainer | undefined = notebook.spec?.template?.spec?.containers?.find(
+    container => container.name === notebook.metadata.name
+  );
+  if (!container) {
+    return empty();
+  };
+
+  const imageStream = getImageStreamByContainer(imageStreams, container);
+  const tag = imageStream?.spec?.tags?.find(
+    (tag) => tag.from.name === container.image,
+  );
+
+  if (!imageStream || !tag) {
+    return empty();
+  };
+  const tagSoftware = getTagDescription(tag);
+  const tagDependencies = getTagDependencies(tag);
+  const numGpus = getNumGpus(container);
 
   const onToggle = (expanded: boolean) => setExpanded(expanded);
 
@@ -24,17 +60,20 @@ const NotebookServerDetails: React.FC = () => {
     >
       <p className="odh-notebook-controller__server-details-title">Notebook image</p>
       <div className="odh-notebook-controller__server-details-image-name">
-        <p>Standard data science</p>
-        <Text component={TextVariants.small}>Python v3.8.7</Text>
+        <p>{imageStream.metadata.annotations?.['opendatahub.io/notebook-image-name']}</p>
+        {tagSoftware && <Text component={TextVariants.small}>{tagSoftware}</Text>}
       </div>
       <DescriptionList>
         <DescriptionListGroup>
           <DescriptionListTerm>Packages</DescriptionListTerm>
           <DescriptionListDescription>
-            <p>Boto3 v1.16.59</p>
-            <p>Boto3 v1.16.59</p>
-            <p>Boto3 v1.16.59</p>
-            <p>Boto3 v1.16.59</p>
+            {tagDependencies.length !== 0
+              && tagDependencies.map((dependency, index) => (
+                <p key={`imagestream-tag-dependency-${index}`}>
+                  {getNameVersionString(dependency)}
+                </p>
+              ))
+            }
           </DescriptionListDescription>
         </DescriptionListGroup>
       </DescriptionList>
@@ -46,15 +85,15 @@ const NotebookServerDetails: React.FC = () => {
         </DescriptionListGroup>
         <DescriptionListGroup>
           <DescriptionListTerm>Limits</DescriptionListTerm>
-          <DescriptionListDescription>6 CPU, 24Gi</DescriptionListDescription>
+          <DescriptionListDescription>{`${container.resources?.limits?.cpu} CPU, ${container.resources?.limits?.memory} Memory`}</DescriptionListDescription>
         </DescriptionListGroup>
         <DescriptionListGroup>
           <DescriptionListTerm>Memory Requests</DescriptionListTerm>
-          <DescriptionListDescription>3 CPU, 24Gi Memory</DescriptionListDescription>
+          <DescriptionListDescription>{`${container.resources?.requests?.cpu} CPU, ${container.resources?.requests?.memory} Memory`}</DescriptionListDescription>
         </DescriptionListGroup>
         <DescriptionListGroup>
           <DescriptionListTerm>Number of GPUs</DescriptionListTerm>
-          <DescriptionListDescription>0</DescriptionListDescription>
+          <DescriptionListDescription>{numGpus}</DescriptionListDescription>
         </DescriptionListGroup>
       </DescriptionList>
     </ExpandableSection>

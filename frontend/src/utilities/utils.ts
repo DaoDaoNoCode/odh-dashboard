@@ -131,3 +131,13 @@ export const getHourAndMinuteByTimeout = (timeout: number): { hour: number; minu
 
 export const getTimeoutByHourAndMinute = (hour: number, minute: number): number =>
   (hour * 60 + minute) * 60;
+
+export const jupyterhubUsernameTranslate = (username: string) => 
+  username.replace(/-/g, '-2d')
+    .replace(/@/g, '-40')
+    .replace(/\./g, '-2e')
+    .replace(/:/g, '-3a');
+
+export const generateNotebookNameFromUsername = (username: string) => `jupyter-nb-${jupyterhubUsernameTranslate(username)}`
+
+export const generatePvcNameFromUsername = (username: string) => `jupyterhub-nb-${jupyterhubUsernameTranslate(username)}-pvc`;

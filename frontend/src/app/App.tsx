@@ -25,7 +25,7 @@ const App: React.FC = () => {
   useSegmentTracking();
   useTrackHistory();
 
-  useWatchBuildStatus();
+  const buildStatuses = useWatchBuildStatus();
 
   React.useEffect(() => {
     dispatch(detectUser());
@@ -45,11 +45,16 @@ const App: React.FC = () => {
         isNavOpen,
         setIsNavOpen,
         onNavToggle,
+        buildStatuses,
       }}
     >
       <Page
         className="odh-dashboard"
-        header={<Header onNotificationsClick={() => setNotificationsOpen(!notificationsOpen)} />}
+        header={
+          <Header
+            onNotificationsClick={() => setNotificationsOpen(!notificationsOpen)}
+          />
+        }
         sidebar={<NavSidebar />}
         notificationDrawer={<AppNotificationDrawer onClose={() => setNotificationsOpen(false)} />}
         isNotificationDrawerExpanded={notificationsOpen}

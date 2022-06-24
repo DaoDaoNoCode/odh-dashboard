@@ -31,16 +31,25 @@ import {
   IAction,
 } from '@patternfly/react-table';
 import { CubesIcon, SearchIcon } from '@patternfly/react-icons';
+<<<<<<< Updated upstream:frontend/src/pages/BYONImages/BYONImagesTable.tsx
 import { BYONImage } from 'types';
+=======
+import { NotebookImage } from 'types';
+>>>>>>> Stashed changes:frontend/src/pages/notebookImages/NotebookImagesTable.tsx
 import { ImportImageModal } from './ImportImageModal';
 import { relativeTime } from '../../utilities/time';
-import './BYONImagesTable.scss';
+import './NotebookImagesTable.scss';
 import { DeleteImageModal } from './DeleteBYONImageModal';
 import { UpdateImageModal } from './UpdateImageModal';
 import { updateBYONImage } from '../../services/BYONImageService';
 
+<<<<<<< Updated upstream:frontend/src/pages/BYONImages/BYONImagesTable.tsx
 export type BYONImagesTableProps = {
   images: BYONImage[];
+=======
+export type NotebookImagesTableProps = {
+  notebooks: NotebookImage[];
+>>>>>>> Stashed changes:frontend/src/pages/notebookImages/NotebookImagesTable.tsx
   forceUpdate: () => void;
 };
 
@@ -56,8 +65,16 @@ type BYONImageTableFilter = {
   count: number;
 };
 
+<<<<<<< Updated upstream:frontend/src/pages/BYONImages/BYONImagesTable.tsx
 export const BYONImagesTable: React.FC<BYONImagesTableProps> = ({ images, forceUpdate }) => {
   const rowActions = (image: BYONImage): IAction[] => [
+=======
+export const NotebookImagesTable: React.FC<NotebookImagesTableProps> = ({
+  notebooks,
+  forceUpdate,
+}) => {
+  const rowActions = (notebook: NotebookImage): IAction[] => [
+>>>>>>> Stashed changes:frontend/src/pages/notebookImages/NotebookImagesTable.tsx
     {
       title: 'Edit',
       id: `${image.name}-edit-button`,
@@ -87,7 +104,11 @@ export const BYONImagesTable: React.FC<BYONImagesTableProps> = ({ images, forceU
     );
   }, [images]);
 
+<<<<<<< Updated upstream:frontend/src/pages/BYONImages/BYONImagesTable.tsx
   const [currentImage, setcurrentImage] = React.useState<BYONImage>(images[0]);
+=======
+  const [currentNotebook, setCurrentNotebook] = React.useState<NotebookImage>(notebooks[0]);
+>>>>>>> Stashed changes:frontend/src/pages/notebookImages/NotebookImagesTable.tsx
   const [deleteImageModalVisible, setDeleteImageModalVisible] = React.useState<boolean>(false);
   const [importImageModalVisible, setImportImageModalVisible] = React.useState<boolean>(false);
   const [updateImageModalVisible, setUpdateImageModalVisible] = React.useState<boolean>(false);
@@ -105,7 +126,11 @@ export const BYONImagesTable: React.FC<BYONImagesTableProps> = ({ images, forceU
     return total;
   };
 
+<<<<<<< Updated upstream:frontend/src/pages/BYONImages/BYONImagesTable.tsx
   const getSortableRowValues = (nb: BYONImage): string[] => {
+=======
+  const getSortableRowValues = (nb: NotebookImage): string[] => {
+>>>>>>> Stashed changes:frontend/src/pages/notebookImages/NotebookImagesTable.tsx
     const { name, description = '', phase = '', visible = false, user = '', uploaded = '' } = nb;
     return [name, description, phase, visible.toString(), user, uploaded.toString()];
   };
@@ -144,6 +169,7 @@ export const BYONImagesTable: React.FC<BYONImagesTableProps> = ({ images, forceU
 
   const currentTimeStamp: number = Date.now();
 
+<<<<<<< Updated upstream:frontend/src/pages/BYONImages/BYONImagesTable.tsx
   const [expandedBYONImageIDs, setExpandedBYONImageIDs] = React.useState<string[]>([]);
   const setBYONImageExpanded = (image: BYONImage, isExpanding = true) => {
     setExpandedBYONImageIDs((prevExpanded) => {
@@ -153,6 +179,17 @@ export const BYONImagesTable: React.FC<BYONImagesTableProps> = ({ images, forceU
   };
   const isBYONImageExpanded = (image: BYONImage) => {
     return expandedBYONImageIDs.includes(image.id);
+=======
+  const [expandedNotebookIDs, setExpandedNotebookIDs] = React.useState<string[]>([]);
+  const setNotebookExpanded = (notebook: NotebookImage, isExpanding = true) => {
+    setExpandedNotebookIDs((prevExpanded) => {
+      const otherExpandedRepoNames = prevExpanded.filter((r) => r !== notebook.id);
+      return isExpanding ? [...otherExpandedRepoNames, notebook.id] : otherExpandedRepoNames;
+    });
+  };
+  const isNotebookExpanded = (notebook: NotebookImage) => {
+    return expandedNotebookIDs.includes(notebook.id);
+>>>>>>> Stashed changes:frontend/src/pages/notebookImages/NotebookImagesTable.tsx
   };
   const [BYONImageVisible, setBYONImageVisible] = React.useState<BYONImageEnabled[]>(
     images.map((image) => {
@@ -243,7 +280,11 @@ export const BYONImagesTable: React.FC<BYONImagesTableProps> = ({ images, forceU
     </React.Fragment>
   );
 
+<<<<<<< Updated upstream:frontend/src/pages/BYONImages/BYONImagesTable.tsx
   const applyTableFilter = (image: BYONImage): boolean => {
+=======
+  const applyTableFilter = (notebook: NotebookImage): boolean => {
+>>>>>>> Stashed changes:frontend/src/pages/notebookImages/NotebookImagesTable.tsx
     if (
       tableFilter.filter !== '' &&
       image[tableFilter.option] &&

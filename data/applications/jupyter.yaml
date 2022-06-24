@@ -13,3 +13,5 @@ spec:
   support: red hat
   docsLink: https://jupyter.org
   internalRoute: notebookController
+  quickStart: create-jupyter-notebook
+  getStartedLink: https://jupyterhub.readthedocs.io/en/stable/getting-started/index.html

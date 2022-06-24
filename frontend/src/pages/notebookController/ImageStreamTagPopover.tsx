@@ -3,6 +3,7 @@ import { Popover } from '@patternfly/react-core';
 import { OutlinedQuestionCircleIcon } from '@patternfly/react-icons';
 import { ImageStreamTag } from '../../types';
 import { getNameVersionString, getTagDependencies } from '../../utilities/imageUtils';
+import './NotebookController.scss';
 
 type ImageStreamTagPopoverProps = {
   tag: ImageStreamTag;
@@ -16,14 +17,14 @@ const ImageStreamTagPopover: React.FC<ImageStreamTagPopoverProps> = ({ tag, desc
   }
   return (
     <Popover
-      className="odh-data-projects__notebook-image-popover"
+      className="odh-notebook-controller__notebook-image-popover"
       showClose
       bodyContent={
         <>
-          <p className="odh-data-projects__notebook-image-popover-title">{description}</p>
+          <p className="odh-notebook-controller__notebook-image-popover-title">{description}</p>
           {dependencies.length > 0 ? (
             <>
-              <p className="odh-data-projects__notebook-image-popover-package-title">
+              <p className="odh-notebook-controller__notebook-image-popover-package-title">
                 Packages included:
               </p>
               {dependencies.map((dependency) => (

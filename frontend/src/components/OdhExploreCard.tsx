@@ -28,6 +28,9 @@ const OdhExploreCard: React.FC<OdhExploreCardProps> = ({
   enableOpen,
   onEnableClose,
 }) => {
+  if (odhApp.spec.hiddenOnExplorePage) {
+    return null;
+  }
   const disabled = odhApp.spec.comingSoon || disableInfo;
   const cardClasses = classNames('odh-card', { 'm-disabled': disabled });
   const badgeClasses = classNames('odh-card__partner-badge', {

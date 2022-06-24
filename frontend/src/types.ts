@@ -63,6 +63,7 @@ export type OdhApplication = {
     };
     featureFlag?: string;
     internalRoute?: string;
+    hiddenOnExplorePage?: boolean | null;
   };
 };
 
@@ -108,10 +109,12 @@ export enum BUILD_PHASE {
   complete = 'Complete',
   failed = 'Failed',
   cancelled = 'Cancelled',
+  error = 'Error',
 }
 
 export type BuildStatus = {
   name: string;
+  imageStreamTag: string;
   status: BUILD_PHASE;
   timestamp: string;
 };
@@ -299,6 +302,21 @@ export type TagContent = {
   dependencies: NameVersionPair[];
 };
 
+export type Volume = {
+  name: string;
+  emptyDir?: Record<string, any>;
+  persistentVolumeClaim?: {
+    claimName: string;
+  };
+};
+
+export type Container = {
+  name: string;
+  content: TagContent;
+  recommended: boolean;
+  default: boolean;
+};
+
 export type ImageTagInfo = {
   name: string;
   content: TagContent;
@@ -317,3 +335,96 @@ export type ImageInfo = {
 };
 
 export type ImageType = 'byon' | 'jupyter' | 'other';
+export type NotebookSize = {
+  name: string;
+  resources: NotebookResources;
+};
+
+export type PersistentVolumeClaim = {
+  apiVersion?: string;
+  kind?: string;
+  metadata: {
+    name: string;
+    namespace?: string;
+    annotations?: { [key: string]: string };
+  };
+  spec: {
+    accessModes: string[];
+    resources: {
+      requests: {
+        storage: string;
+      };
+    };
+    storageClassName?: string;
+    volumeMode: 'Filesystem' | 'Block';
+  };
+  status?: Record<string, any>;
+};
+
+export type PersistentVolumeClaimList = {
+  apiVersion?: string;
+  kind?: string;
+  metadata: Record<string, unknown>;
+  items: PersistentVolumeClaim[];
+};
+
+export type EnvironmentVariable = {
+  name: string;
+  value: string;
+};
+
+
+
+export type NotebookPort = {
+  name: string;
+  containerPort: number;
+  protocol: string;
+};
+
+export type NotebookResources = {
+  requests: {
+    cpu?: string;
+    memory?: string;
+  };
+  limits?: {
+    cpu?: string;
+    memory?: string;
+  };
+};
+
+export type NotebookContainer = {
+  name: string;
+  image: string;
+  imagePullPolicy?: string;
+  workingDir?: string;
+  env: EnvironmentVariable[];
+  ports?: NotebookPort[];
+  resources?: NotebookResources;
+  livenessProbe?: Record<string, unknown>;
+};
+
+export type Notebook = {
+  apiVersion?: string;
+  kind?: string;
+  metadata: {
+    name: string;
+    namespace?: string;
+    labels?: { [key: string]: string };
+    annotations?: { [key: string]: string };
+  };
+  spec: {
+    template: {
+      spec: {
+        containers: NotebookContainer[];
+      };
+    };
+  };
+  status?: Record<string, unknown>;
+} & K8sResourceCommon;
+
+export type NotebookList = {
+  apiVersion?: string;
+  kind?: string;
+  metadata: Record<string, unknown>;
+  items: Notebook[];
+} & K8sResourceCommon;
