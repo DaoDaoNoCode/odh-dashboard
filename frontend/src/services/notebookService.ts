@@ -1,6 +1,7 @@
 import axios from 'axios';
 import {
   ImageStreamTag,
+  ImageTagInfo,
   Notebook,
   NotebookSize,
   Volume,
@@ -22,7 +23,7 @@ export const getNotebook = (name: string): Promise<Notebook> => {
 
 export const createNotebook = (
   name: string,
-  tag: ImageStreamTag,
+  tag: ImageTagInfo | undefined,
   notebookSize: NotebookSize | undefined,
   gpus: number,
   volumes?: Volume[],
@@ -67,9 +68,9 @@ export const createNotebook = (
             {
               // TODO: authorize and pull from internal registry
               // image: `${imageStream?.status?.dockerImageRepository}:${tag.name}`,
-              image: tag.from.name,
+              image: null,
               imagePullPolicy: 'Always',
-              name,
+              name: tag?.name,
               env: [
                 {
                   name: 'NOTEBOOK_ARGS',

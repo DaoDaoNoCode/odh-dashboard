@@ -114,7 +114,7 @@ export enum BUILD_PHASE {
 
 export type BuildStatus = {
   name: string;
-  imageStreamTag: string;
+  imageTag: string;
   status: BUILD_PHASE;
   timestamp: string;
 };
@@ -239,6 +239,38 @@ export type PipelineRunKind = {
   };
 } & K8sResourceCommon;
 
+export type ImageTag = {
+  image: ImageInfo | undefined;
+  tag: ImageTagInfo | undefined;
+};
+
+export type ImageSoftwareType = {
+  name: string;
+  version?: string;
+};
+
+export type EnvVarCategoryType = {
+  name: string;
+  variables: [
+    {
+      name: string;
+      type: string;
+    },
+  ];
+};
+
+export type VariableRow = {
+  variableType: string;
+  variables: EnvVarType[];
+  errors: { [key: string]: string };
+};
+
+export type EnvVarType = {
+  name: string;
+  type: string;
+  value: string | number;
+};
+
 export type ImageStreamTag = {
   name: string;
   labels?: { [key: string]: string };
@@ -329,12 +361,13 @@ export type ImageInfo = {
   tags: ImageTagInfo[];
   description?: string;
   url?: string;
-  display_name?: string;
+  display_name: string;
   default?: boolean;
-  order?: number;
+  order: number;
 };
 
 export type ImageType = 'byon' | 'jupyter' | 'other';
+
 export type NotebookSize = {
   name: string;
   resources: NotebookResources;

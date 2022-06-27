@@ -1,32 +1,32 @@
 import * as React from 'react';
-import { ImageStream, ImageStreamList } from '../types';
+import { ImageInfo } from '../types';
 import { POLL_INTERVAL } from './const';
-import { getImageStreams } from 'services/imageStreamsService';
+import { fetchImages } from '../services/imagesService';
 
-export const useWatchImageStreams = (): {
-  imageStreams: ImageStream[];
+export const useWatchImages = (): {
+  images: ImageInfo[];
   loaded: boolean;
   loadError: Error | undefined;
 } => {
   const [loaded, setLoaded] = React.useState<boolean>(false);
   const [loadError, setLoadError] = React.useState<Error>();
-  const [imageStreams, setImageStreams] = React.useState<ImageStream[]>([]);
+  const [images, setImages] = React.useState<ImageInfo[]>([]);
 
   React.useEffect(() => {
     let watchHandle;
-    const watchImageStreams = () => {
-      getImageStreams()
-        .then((data: ImageStreamList) => {
+    const watchImages = () => {
+      fetchImages()
+        .then((data: ImageInfo[]) => {
           setLoaded(true);
           setLoadError(undefined);
-          setImageStreams(data.items ?? []);
+          setImages(data);
         })
         .catch((e) => {
           setLoadError(e);
         });
-      watchHandle = setTimeout(watchImageStreams, POLL_INTERVAL);
+      watchHandle = setTimeout(watchImages, POLL_INTERVAL);
     };
-    watchImageStreams();
+    watchImages();
 
     return () => {
       if (watchHandle) {
@@ -37,5 +37,5 @@ export const useWatchImageStreams = (): {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { imageStreams, loaded, loadError };
+  return { images, loaded, loadError };
 };

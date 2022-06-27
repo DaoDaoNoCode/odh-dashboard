@@ -4,17 +4,17 @@ import ApplicationsPage from '../ApplicationsPage';
 import SpawnerPage from './SpawnerPage';
 import NotebookServerDetails from './NotebookServerDetails';
 import AppContext from 'app/AppContext';
-import { useWatchImageStreams } from 'utilities/useWatchImageStreams';
+import { useWatchImages } from 'utilities/useWatchImages';
 import { useWatchDashboardConfig } from 'utilities/useWatchDashboardConfig';
 import { useWatchNotebook } from 'utilities/useWatchNotebook';
 import { deleteNotebook } from 'services/notebookService';
 import { useSelector } from 'react-redux';
 import { State } from 'redux/types';
-import { generateNotebookNameFromUsername, generatePvcNameFromUsername } from 'utilities/utils';
+import { generateNotebookNameFromUsername } from 'utilities/utils';
 
 export const NotebookController: React.FC = React.memo(() => {
   const { setIsNavOpen } = React.useContext(AppContext);
-  const { imageStreams } = useWatchImageStreams();
+  const { images } = useWatchImages();
   const { dashboardConfig } = useWatchDashboardConfig();
   const { notebook, loaded, loadError, forceUpdate: updateNotebook } = useWatchNotebook();
   const username = useSelector<State, string>((state) => state.appState.user || '');
@@ -31,7 +31,7 @@ export const NotebookController: React.FC = React.memo(() => {
       loaded={loaded}
       loadError={loadError}
       empty={isEmpty}
-      emptyStatePage={<SpawnerPage imageStreams={imageStreams} odhConfig={dashboardConfig} updateNotebook={updateNotebook} />}
+      emptyStatePage={<SpawnerPage images={images} odhConfig={dashboardConfig} updateNotebook={updateNotebook} />}
     >
       {notebook && 
         <div className="odh-notebook-controller__page">
@@ -51,7 +51,7 @@ export const NotebookController: React.FC = React.memo(() => {
               }}>Return to server</Button>
             </ActionListItem>
           </ActionList>
-          <NotebookServerDetails notebook={notebook} imageStreams={imageStreams}/>
+          <NotebookServerDetails notebook={notebook} images={images}/>
         </div>
       }
     </ApplicationsPage>

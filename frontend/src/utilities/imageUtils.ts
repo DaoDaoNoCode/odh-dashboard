@@ -2,21 +2,14 @@ import compareVersions from 'compare-versions';
 import {
   BuildStatus,
   BUILD_PHASE,
-  Container,
+  ImageInfo,
   ImageSoftwareType,
-  ImageStream,
-  ImageStreamStatusTag,
   ImageStreamTag,
-  ImageTagType,
-  ImageType,
+  ImageTagInfo,
+  NotebookContainer,
 } from '../types';
 import {
-  ANNOTATION_NOTEBOOK_IMAGE_NAME,
-  ANNOTATION_NOTEBOOK_IMAGE_ORDER,
-  ANNOTATION_NOTEBOOK_IMAGE_TAG_DEFAULT,
   ANNOTATION_NOTEBOOK_IMAGE_TAG_DEPENDENCIES,
-  ANNOTATION_NOTEBOOK_IMAGE_TAG_RECOMMENDED,
-  ANNOTATION_NOTEBOOK_IMAGE_TAG_SOFTWARE,
   LIMIT_NOTEBOOK_IMAGE_GPU,
 } from './const';
 
@@ -26,31 +19,33 @@ const failedStatuses = ['Error', 'Failed'];
 const PENDING_PHASES = [BUILD_PHASE.new, BUILD_PHASE.pending, BUILD_PHASE.running, BUILD_PHASE.cancelled];
 const FAILED_PHASES = [BUILD_PHASE.error, BUILD_PHASE.failed];
 
-export const compareTagVersions = (a: ImageStreamTag, b: ImageStreamTag): number => {
+export const compareTagVersions = (a: ImageTagInfo, b: ImageTagInfo): number => {
   if (compareVersions.validate(a.name) && compareVersions.validate(b.name)) {
     return compareVersions(b.name, a.name);
   }
   return b.name.localeCompare(a.name);
 };
 
-export const isImageBuildInProgress = (image: ImageType): boolean => {
+export const isImageBuildInProgress = (image: ImageInfo): boolean => {
   const inProgressTag = image.tags?.find((tag) =>
-    runningStatuses.includes(tag.build_status?.toLowerCase() ?? ''),
+    PENDING_PHASES.includes(tag.build_status?.toLowerCase() ?? ''),
   );
   return !!inProgressTag;
 };
 
-export const isImageStreamTagBuildValid = (buildStatuses: BuildStatus[], imageStream: ImageStream, tag: ImageStreamTag): boolean => {
-  const imageStreamTag = `${imageStream.metadata.name}:${tag.name}`;
-  const build = buildStatuses.find(buildStatus => buildStatus.imageStreamTag === imageStreamTag);
+export const isImageTagBuildValid = (buildStatuses: BuildStatus[], image: ImageInfo, tag: ImageTagInfo): boolean => {
+  const imageTag = `${image.name}:${tag.name}`;
+  const build = buildStatuses.find(buildStatus => buildStatus.imageTag === imageTag);
   if (!build) {
     return true;
   };
   return (
     !PENDING_PHASES.includes(build.status) &&
-    !failedStatuses.includes(build.status)
+    !FAILED_PHASES.includes(build.status)
   );
 };
+
+export const checkOrder = (a: ImageInfo, b: ImageInfo): number => a.order - b.order;
 
 export const getVersion = (version?: string, prefix?: string): string => {
   if (!version) {
@@ -65,61 +60,6 @@ export const getVersion = (version?: string, prefix?: string): string => {
 export const getNameVersionString = (software: ImageSoftwareType): string =>
   `${software.name}${getVersion(software.version, ' v')}`;
 
-export const getImageStreamDisplayName = (imageStream: ImageStream): string =>
-  imageStream.metadata.annotations?.[ANNOTATION_NOTEBOOK_IMAGE_NAME] ?? '';
-
-export const getTagForImageStream = (
-  imageStream: ImageStream,
-  selectedImage?: string,
-  selectedTag?: string,
-): ImageStreamTag | undefined => {
-  if (imageStream.metadata.name === selectedImage && selectedTag) {
-    const statusTag = imageStream.status?.tags?.find((tag) => tag.tag === selectedTag);
-    if (statusTag) {
-      return getTagByTagNameAndImageStream(imageStream, statusTag.tag);
-    }
-  }
-  return getDefaultTagByImageStream(imageStream);
-};
-
-// Only returns a version string if there are multiple tags
-export const getImageStreamTagVersion = (
-  imageStream: ImageStream,
-  selectedImage?: string,
-  selectedTag?: string,
-): string => {
-  const tags = imageStream.status?.tags;
-  if (!tags) {
-    return '';
-  }
-  if (tags.length > 1) {
-    const defaultTag = getDefaultTagByImageStream(imageStream);
-    if (imageStream.metadata.name === selectedImage && selectedTag) {
-      return `${selectedTag} ${selectedTag === defaultTag?.name ? ' (default)' : ''}`;
-    }
-    return defaultTag?.name ?? tags[0].tag;
-  }
-  return '';
-};
-
-export const checkImageStreamOrder = (a: ImageStream, b: ImageStream): number => {
-  const aOrder = Number(a.metadata.annotations?.[ANNOTATION_NOTEBOOK_IMAGE_ORDER] ?? 100);
-  const bOrder = Number(b.metadata.annotations?.[ANNOTATION_NOTEBOOK_IMAGE_ORDER] ?? 100);
-  return aOrder - bOrder;
-}
-  
-
-export const getTagDescription = (tag?: ImageStreamTag): string => {
-  const software = tag?.annotations?.[ANNOTATION_NOTEBOOK_IMAGE_TAG_SOFTWARE];
-  if (!software) {
-    return '';
-  }
-  const softwareDescriptions = JSON.parse(software).map((notebookTagSoftware: ImageSoftwareType) =>
-    getNameVersionString(notebookTagSoftware),
-  );
-  return softwareDescriptions.join(', ');
-};
-
 export const getTagDependencies = (tag?: ImageStreamTag): ImageSoftwareType[] => {
   const dependencies = tag?.annotations?.[ANNOTATION_NOTEBOOK_IMAGE_TAG_DEPENDENCIES];
   if (!dependencies) {
@@ -128,62 +68,28 @@ export const getTagDependencies = (tag?: ImageStreamTag): ImageSoftwareType[] =>
   return JSON.parse(dependencies);
 };
 
-export const getNumGpus = (container?: Container): number => {
+export const getNumGpus = (container?: NotebookContainer): number => {
   return container?.resources?.limits?.[LIMIT_NOTEBOOK_IMAGE_GPU] || 0;
 };
 
-export const getImageStreamByContainer = (
-  imageStreams: ImageStream[],
-  container?: Container,
-): ImageStream | undefined =>
-  imageStreams.find((imageStream) =>
-    imageStream.spec.tags?.find((tag) => tag.from?.name === container?.image),
-  );
-
-export const getTagByTagNameAndImageStream = (
-  imageStream: ImageStream,
-  tagName: string,
-): ImageStreamTag | undefined => imageStream.spec.tags?.find((tag) => tag.name === tagName);
-
-export const getTagsByStatusTags = (
-  imageStream: ImageStream,
-  statusTags: ImageStreamStatusTag[],
-): ImageStreamTag[] => {
-  const tags: ImageStreamTag[] = [];
-  statusTags.forEach((statusTag) => {
-    const tag = getTagByTagNameAndImageStream(imageStream, statusTag.tag);
-    if (tag) {
-      tags.push(tag);
-    }
-  });
-  return tags;
-};
-
-export const getDefaultTagByImageStream = (
-  imageStream: ImageStream,
-): ImageStreamTag | undefined => {
-  const statusTags = imageStream.status?.tags;
-  if (!statusTags) {
+export const getDefaultTag = (buildStatuses: BuildStatus[] , image: ImageInfo): ImageTagInfo | undefined => {
+  if (!image.tags) {
     return undefined;
   }
 
-  const tags = getTagsByStatusTags(imageStream, statusTags);
-
-  if (tags.length <= 1) {
-    return tags[0];
+  if (image.tags?.length <= 1) {
+    return image.tags[0];
   }
 
-  // do this later (may need the API call to build.openshift.io/v1);
-  // const validTags = tags.filter((tag) => isImageTagBuildValid(tag));
-  // const tags = validTags.length ? validTags : image.tags;
+  const validTags = image.tags.filter((tag) => isImageTagBuildValid(buildStatuses, image, tag));
+  const tags = validTags.length ? validTags : image.tags;
+
+  if (!tags) {
+    return undefined;
+  }
 
   // Return the recommended tag or the default tag
-  const defaultTag = tags.find(
-    (tag) =>
-      tag?.annotations?.[ANNOTATION_NOTEBOOK_IMAGE_TAG_RECOMMENDED] ||
-      tag?.annotations?.[ANNOTATION_NOTEBOOK_IMAGE_TAG_DEFAULT],
-  );
-
+  const defaultTag = tags.find((tag) => tag.recommended) || tags.find((tag) => tag.default);
   if (defaultTag) {
     return defaultTag;
   }
@@ -191,3 +97,63 @@ export const getDefaultTagByImageStream = (
   // Return the most recent version
   return tags.sort(compareTagVersions)[0];
 };
+
+export const getTagForImage = (
+  buildStatuses: BuildStatus[],
+  image: ImageInfo,
+  selectedImage?: string,
+  selectedTag?: string,
+): ImageTagInfo| undefined => {
+  let tag;
+
+  if (!image.tags) {
+    return undefined;
+  }
+
+  if (image.tags.length > 1) {
+    if (image.name === selectedImage && selectedTag) {
+      tag = image.tags.find((tag) => tag.name === selectedTag);
+    } else {
+      tag = getDefaultTag(buildStatuses, image);
+    }
+  }
+  return tag || image.tags[0];
+};
+
+// Only returns a version string if there are multiple tags
+export const getImageTagVersion = (
+  buildStatuses: BuildStatus[],
+  image: ImageInfo,
+  selectedImage?: string,
+  selectedTag?: string,
+): string => {
+  if (!image.tags) {
+    return '';
+  }
+  if (image?.tags.length > 1) {
+    const defaultTag = getDefaultTag(buildStatuses, image);
+    if (image.name === selectedImage && selectedTag) {
+      return `${selectedTag} ${selectedTag === defaultTag?.name ? ' (default)' : ''}`;
+    }
+    return defaultTag?.name ?? image.tags[0].name;
+  }
+  return '';
+};
+
+export const getDescriptionForTag = (imageTag?: ImageTagInfo): string => {
+  if (!imageTag) {
+    return '';
+  }
+  const softwareDescriptions = imageTag.content?.software.map((software) =>
+    getNameVersionString(software),
+  ) ?? [''];
+  return softwareDescriptions.join(', ');
+};
+
+export const getImageByContainer = (
+  images: ImageInfo[],
+  container?: NotebookContainer,
+): ImageInfo | undefined =>
+  images.find((image) =>
+    image.tags?.find((tag) => tag.name === container?.name),
+  );

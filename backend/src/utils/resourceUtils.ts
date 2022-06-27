@@ -274,7 +274,7 @@ const getBuildConfigStatus = (
       const mostRecent = bcBuilds.sort(compareBuilds).pop();
       return {
         name: notebookName,
-        imageStreamTag: mostRecent.spec.output.to.name,
+        imageTag: mostRecent.spec.output.to.name,
         status: mostRecent.status.phase,
         timestamp: mostRecent.status.completionTimestamp || mostRecent.status.startTimestamp,
       };

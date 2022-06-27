@@ -1,35 +1,34 @@
 import * as React from 'react';
 import { ExpandableSection, Label, Radio } from '@patternfly/react-core';
 import { StarIcon } from '@patternfly/react-icons';
-import { ImageStream, ImageStreamTag } from '../../types';
-import ImageStreamTagPopover from './ImageStreamTagPopover';
-import { compareTagVersions, getTagDescription, getVersion, isImageStreamTagBuildValid } from '../../utilities/imageUtils';
-import { ANNOTATION_NOTEBOOK_IMAGE_TAG_RECOMMENDED } from '../../utilities/const';
-import './NotebookController.scss';
+import { ImageInfo, ImageTagInfo } from '../../types';
+import ImageTagPopover from './ImageTagPopover';
+import { compareTagVersions, getDescriptionForTag, getVersion, isImageTagBuildValid } from '../../utilities/imageUtils';
 import AppContext from 'app/AppContext';
 
+import './NotebookController.scss';
+
 type ImageVersionsProps = {
-  imageStream: ImageStream;
-  tags: ImageStreamTag[];
-  selectedTag?: ImageStreamTag;
-  onSelect: (tag: ImageStreamTag, selected: boolean) => void;
+  image: ImageInfo;
+  tags: ImageTagInfo[];
+  selectedTag?: ImageTagInfo;
+  onSelect: (tag: ImageTagInfo, selected: boolean) => void;
 };
 
-const ImageStreamVersions: React.FC<ImageVersionsProps> = ({
-  imageStream,
+const ImageVersions: React.FC<ImageVersionsProps> = ({
+  image,
   tags,
   selectedTag,
   onSelect,
 }) => {
   const { buildStatuses } = React.useContext(AppContext);
   const [isExpanded, setExpanded] = React.useState<boolean>(false);
-  const name = imageStream.metadata.name;
+  if (!image.tags || image.tags.length < 2) {
+    return null;
+  }
   const onToggle = (isOpen: boolean) => {
     setExpanded(isOpen);
   };
-  if (tags.length < 2) {
-    return null;
-  }
 
   return (
     <ExpandableSection
@@ -38,27 +37,27 @@ const ImageStreamVersions: React.FC<ImageVersionsProps> = ({
       isExpanded={isExpanded}
       className="odh-notebook-controller__notebook-image-tags"
     >
-      {tags.sort(compareTagVersions).map((tag: ImageStreamTag) => {
-        const disabled = !isImageStreamTagBuildValid(buildStatuses, imageStream, tag);
+      {tags.sort(compareTagVersions).map((tag: ImageTagInfo) => {
+        const disabled = !isImageTagBuildValid(buildStatuses, image, tag);
         return (
           <Radio
-            key={`${name}:${tag.name}`}
-            id={`${name}:${tag.name}`}
-            name={`${name}:${tag.name}`}
+            key={`${image.name}:${tag.name}`}
+            id={`${image.name}:${tag.name}`}
+            name={`${image.name}:${tag.name}`}
             className="odh-notebook-controller__notebook-image-option"
             isDisabled={disabled}
             label={
               <span className="odh-notebook-controller__notebook-image-title">
                 Version{` ${getVersion(tag.name)}`}
-                <ImageStreamTagPopover tag={tag} />
-                {tag?.annotations?.[ANNOTATION_NOTEBOOK_IMAGE_TAG_RECOMMENDED] ? (
+                <ImageTagPopover tag={tag} />
+                {tag.recommended ? (
                   <Label color="blue" icon={<StarIcon />}>
                     Recommended
                   </Label>
                 ) : null}
               </span>
             }
-            description={getTagDescription(tag)}
+            description={getDescriptionForTag(tag)}
             isChecked={tag.name === selectedTag?.name}
             onChange={(checked: boolean) => onSelect(tag, checked)}
           />
@@ -68,4 +67,4 @@ const ImageStreamVersions: React.FC<ImageVersionsProps> = ({
   );
 };
 
-export default ImageStreamVersions;
+export default ImageVersions;

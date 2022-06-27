@@ -10,15 +10,15 @@ import {
   Select,
   SelectOption,
 } from '@patternfly/react-core';
-import { checkImageStreamOrder, getDefaultTagByImageStream, isImageStreamTagBuildValid } from '../../utilities/imageUtils';
+import { checkOrder, getDefaultTag } from '../../utilities/imageUtils';
 import {
   EnvVarCategoryType,
-  ImageStream,
-  ImageStreamAndTag,
-  ImageStreamTag,
+  ImageInfo,
+  ImageTag,
   VariableRow,
+  ImageTagInfo,
 } from '../../types';
-import ImageStreamSelector from './ImageStreamSelector';
+import ImageSelector from './ImageSelector';
 import EnvironmentVariablesRow from './EnvironmentVariablesRow';
 import { mockUIConfig } from './mock';
 import { CUSTOM_VARIABLE, EMPTY_KEY } from './const';
@@ -35,16 +35,16 @@ import './NotebookController.scss';
 import StartServerModal from './StartServerModal';
 
 type SpawnerPageProps = {
-  imageStreams: ImageStream[];
+  images: ImageInfo[];
   odhConfig: any;
   updateNotebook: () => void;
 };
 
-const SpawnerPage: React.FC<SpawnerPageProps> = React.memo(({ imageStreams, odhConfig, updateNotebook }) => {
+const SpawnerPage: React.FC<SpawnerPageProps> = React.memo(({ images, odhConfig, updateNotebook }) => {
   const history = useHistory();
   const { buildStatuses } = React.useContext(AppContext);
-  const [selectedImageTag, setSelectedImageTag] = React.useState<ImageStreamAndTag>({
-    imageStream: undefined,
+  const [selectedImageTag, setSelectedImageTag] = React.useState<ImageTag>({
+    image: undefined,
     tag: undefined,
   });
   const [sizeDropdownOpen, setSizeDropdownOpen] = React.useState(false);
@@ -57,17 +57,17 @@ const SpawnerPage: React.FC<SpawnerPageProps> = React.memo(({ imageStreams, odhC
 
   React.useEffect(() => {
     setFirstValidImage();
-  }, [imageStreams])
+  }, []);
 
   const setFirstValidImage = () => {
     let found = false;
     let i = 0;
-    while (!found && i < imageStreams.length) {
-      const imageStream = imageStreams[i++];
-      if (imageStream) {
-        const tag = getDefaultTagByImageStream(imageStream);
-        if (tag && isImageStreamTagBuildValid(buildStatuses, imageStream, tag)) {
-          const values = { imageStream: imageStream, tag: tag };
+    while (!found && i < images.length) {
+      const image = images[i++];
+      if (image) {
+        const tag = getDefaultTag(buildStatuses, image);
+        if (tag) {
+          const values = { image, tag };
           setSelectedImageTag(values);
           found = true;
         }
@@ -76,12 +76,12 @@ const SpawnerPage: React.FC<SpawnerPageProps> = React.memo(({ imageStreams, odhC
   };
 
   const handleImageTagSelection = (
-    imageStream: ImageStream,
-    tag: ImageStreamTag | undefined,
+    image: ImageInfo,
+    tag: ImageTagInfo,
     checked: boolean,
   ) => {
     if (checked) {
-      setSelectedImageTag({ imageStream, tag });
+      setSelectedImageTag({ image, tag });
     }
   };
 
@@ -178,14 +178,6 @@ const SpawnerPage: React.FC<SpawnerPageProps> = React.memo(({ imageStreams, odhC
   };
 
   const handleNotebookAction = async () => {
-    //setStartShown(true);
-    const { imageStream, tag } = selectedImageTag;
-    if (!imageStream || !tag) {
-      // change to alert
-      console.error('no image selected');
-      return;
-    }
-
     const notebookSize = odhConfig?.spec?.notebookSizes?.find((ns) => ns.name === selectedSize);
     try {
       const pvcName = generatePvcNameFromUsername(username);
@@ -198,7 +190,7 @@ const SpawnerPage: React.FC<SpawnerPageProps> = React.memo(({ imageStreams, odhC
       const notebookName = generateNotebookNameFromUsername(username);
       await createNotebook(
         notebookName,
-        tag,
+        selectedImageTag.tag,
         notebookSize,
         parseInt(selectedGpu),
         volumes,
@@ -216,11 +208,11 @@ const SpawnerPage: React.FC<SpawnerPageProps> = React.memo(({ imageStreams, odhC
         <FormSection title="Notebook image">
           <FormGroup fieldId="modal-notebook-image">
             <Grid sm={12} md={12} lg={12} xl={6} xl2={6} hasGutter>
-              {imageStreams.sort(checkImageStreamOrder).map((imageStream) => (
-                <GridItem key={imageStream.metadata.name}>
-                  <ImageStreamSelector
-                    imageStream={imageStream}
-                    selectedImage={selectedImageTag.imageStream}
+              {images.sort(checkOrder).map((image) => (
+                <GridItem key={image.name}>
+                  <ImageSelector
+                    image={image}
+                    selectedImage={selectedImageTag.image}
                     selectedTag={selectedImageTag.tag}
                     handleSelection={handleImageTagSelection}
                   />

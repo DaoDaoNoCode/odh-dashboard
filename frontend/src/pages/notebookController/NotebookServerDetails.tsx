@@ -8,17 +8,17 @@ import {
   Text,
   TextVariants,
 } from '@patternfly/react-core';
-import { Container, ImageStream, Notebook, NotebookContainer } from '../../types';
-import { getImageStreamByContainer, getNameVersionString, getNumGpus, getTagDependencies, getTagDescription } from 'utilities/imageUtils';
+import { ImageInfo, Notebook, NotebookContainer } from '../../types';
+import { getDescriptionForTag, getImageByContainer, getNameVersionString, getNumGpus } from 'utilities/imageUtils';
 
 type NotebookServerDetailsProps = {
   notebook: Notebook;
-  imageStreams: ImageStream[];
+  images: ImageInfo[];
 }
 
 const NotebookServerDetails: React.FC<NotebookServerDetailsProps> = ({
   notebook,
-  imageStreams
+  images
 }) => {
   const [isExpanded, setExpanded] = React.useState(false);
 
@@ -36,16 +36,16 @@ const NotebookServerDetails: React.FC<NotebookServerDetailsProps> = ({
     return empty();
   };
 
-  const imageStream = getImageStreamByContainer(imageStreams, container);
-  const tag = imageStream?.spec?.tags?.find(
-    (tag) => tag.from.name === container.image,
+  const image = getImageByContainer(images, container);
+  const tag = image?.tags?.find(
+    (tag) => tag.name === container.name,
   );
 
-  if (!imageStream || !tag) {
+  if (!image || !tag) {
     return empty();
   };
-  const tagSoftware = getTagDescription(tag);
-  const tagDependencies = getTagDependencies(tag);
+  const tagSoftware = getDescriptionForTag(tag);
+  const tagDependencies = tag.content.dependencies ?? [];
   const numGpus = getNumGpus(container);
 
   const onToggle = (expanded: boolean) => setExpanded(expanded);
@@ -60,7 +60,7 @@ const NotebookServerDetails: React.FC<NotebookServerDetailsProps> = ({
     >
       <p className="odh-notebook-controller__server-details-title">Notebook image</p>
       <div className="odh-notebook-controller__server-details-image-name">
-        <p>{imageStream.metadata.annotations?.['opendatahub.io/notebook-image-name']}</p>
+        <p>{image.display_name}</p>
         {tagSoftware && <Text component={TextVariants.small}>{tagSoftware}</Text>}
       </div>
       <DescriptionList>
