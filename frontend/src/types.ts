@@ -364,6 +364,7 @@ export type ImageInfo = {
   display_name: string;
   default?: boolean;
   order: number;
+  dockerImageRepo: string;
 };
 
 export type ImageType = 'byon' | 'jupyter' | 'other';
@@ -406,8 +407,6 @@ export type EnvironmentVariable = {
   value: string;
 };
 
-
-
 export type NotebookPort = {
   name: string;
   containerPort: number;
@@ -425,12 +424,15 @@ export type NotebookResources = {
   };
 };
 
+export type VolumeMount = { mountPath: string; name: string };
+
 export type NotebookContainer = {
   name: string;
   image: string;
   imagePullPolicy?: string;
   workingDir?: string;
   env: EnvironmentVariable[];
+  volumeMounts: VolumeMount[];
   ports?: NotebookPort[];
   resources?: NotebookResources;
   livenessProbe?: Record<string, unknown>;

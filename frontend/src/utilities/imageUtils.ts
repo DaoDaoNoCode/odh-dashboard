@@ -5,6 +5,7 @@ import {
   ImageInfo,
   ImageSoftwareType,
   ImageStreamTag,
+  ImageTag,
   ImageTagInfo,
   NotebookContainer,
 } from '../types';
@@ -26,10 +27,15 @@ export const compareTagVersions = (a: ImageTagInfo, b: ImageTagInfo): number => 
   return b.name.localeCompare(a.name);
 };
 
-export const isImageBuildInProgress = (image: ImageInfo): boolean => {
-  const inProgressTag = image.tags?.find((tag) =>
-    PENDING_PHASES.includes(tag.build_status?.toLowerCase() ?? ''),
-  );
+export const isImageBuildInProgress = (buildStatuses: BuildStatus[], image: ImageInfo): boolean => {
+  const inProgressTag = image.tags?.find((tag) => {
+    const imageTag = `${image.name}:${tag.name}`;
+    const build = buildStatuses.find(buildStatus => buildStatus.imageTag === imageTag);
+    if (!build) {
+      return false;
+    }
+    return PENDING_PHASES.includes(build.status);
+  });
   return !!inProgressTag;
 };
 
@@ -150,10 +156,15 @@ export const getDescriptionForTag = (imageTag?: ImageTagInfo): string => {
   return softwareDescriptions.join(', ');
 };
 
-export const getImageByContainer = (
+export const getImageTagByContainer = (
   images: ImageInfo[],
   container?: NotebookContainer,
-): ImageInfo | undefined =>
-  images.find((image) =>
-    image.tags?.find((tag) => tag.name === container?.name),
-  );
+): ImageTag => {
+  const imageTag = container?.image.split('/').at(-1)?.split(':');
+  if (!imageTag || imageTag.length < 2) {
+    return { image: undefined, tag: undefined };
+  };
+  const image = images.find(image => image.name === imageTag[0]);
+  const tag = image?.tags.find(tag => tag.name === imageTag[1]);
+  return { image, tag };
+}

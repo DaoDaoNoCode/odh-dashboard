@@ -188,9 +188,10 @@ const SpawnerPage: React.FC<SpawnerPageProps> = React.memo(({ images, odhConfig,
       const volumes = [{ name: pvcName, persistentVolumeClaim: { claimName: pvcName }}];
       const volumeMounts = [{ mountPath: '/home/jovyan', name: pvcName }];
       const notebookName = generateNotebookNameFromUsername(username);
+      const imageUrl = `${selectedImageTag.image?.dockerImageRepo}:${selectedImageTag.tag?.name}`;
       await createNotebook(
         notebookName,
-        selectedImageTag.tag,
+        imageUrl,
         notebookSize,
         parseInt(selectedGpu),
         volumes,

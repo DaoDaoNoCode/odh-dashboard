@@ -9,7 +9,7 @@ import {
   TextVariants,
 } from '@patternfly/react-core';
 import { ImageInfo, Notebook, NotebookContainer } from '../../types';
-import { getDescriptionForTag, getImageByContainer, getNameVersionString, getNumGpus } from 'utilities/imageUtils';
+import { getDescriptionForTag, getImageTagByContainer, getNameVersionString, getNumGpus } from 'utilities/imageUtils';
 
 type NotebookServerDetailsProps = {
   notebook: Notebook;
@@ -32,14 +32,12 @@ const NotebookServerDetails: React.FC<NotebookServerDetailsProps> = ({
   const container: NotebookContainer | undefined = notebook.spec?.template?.spec?.containers?.find(
     container => container.name === notebook.metadata.name
   );
+  console.log(container)
   if (!container) {
     return empty();
   };
 
-  const image = getImageByContainer(images, container);
-  const tag = image?.tags?.find(
-    (tag) => tag.name === container.name,
-  );
+  const { image, tag } = getImageTagByContainer(images, container);
 
   if (!image || !tag) {
     return empty();

@@ -23,7 +23,7 @@ export const getNotebook = (name: string): Promise<Notebook> => {
 
 export const createNotebook = (
   name: string,
-  tag: ImageTagInfo | undefined,
+  imageUrl: string,
   notebookSize: NotebookSize | undefined,
   gpus: number,
   volumes?: Volume[],
@@ -68,9 +68,9 @@ export const createNotebook = (
             {
               // TODO: authorize and pull from internal registry
               // image: `${imageStream?.status?.dockerImageRepository}:${tag.name}`,
-              image: null,
+              image: imageUrl,
               imagePullPolicy: 'Always',
-              name: tag?.name,
+              name,
               env: [
                 {
                   name: 'NOTEBOOK_ARGS',

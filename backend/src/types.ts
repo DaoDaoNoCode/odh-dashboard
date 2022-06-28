@@ -495,6 +495,7 @@ export type ImageInfo = {
   display_name?: string;
   default?: boolean;
   order?: number;
+  dockerImageRepo?: string;
 };
 
 export type ImageType = 'byon' | 'jupyter' | 'other';

@@ -79,6 +79,7 @@ const processImageInfo = (imageStream: ImageStream): ImageInfo => {
     display_name: annotations[IMAGE_ANNOTATIONS.DISP_NAME] || imageStream.metadata.name,
     tags: getTagInfo(imageStream),
     order: +annotations[IMAGE_ANNOTATIONS.IMAGE_ORDER] || 100,
+    dockerImageRepo: imageStream.status?.dockerImageRepository || '',
   };
 
   return imageInfo;
