@@ -9,7 +9,7 @@ jobs:
     outputs:
       modules-cache-key: ${{ steps.key.outputs.modules-cache-key }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Generate modules cache key
         id: key
         run: |
@@ -39,7 +39,7 @@ jobs:
     needs: Setup
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4.3.0
         with:
@@ -65,7 +65,7 @@ jobs:
     needs: Setup
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4.3.0
         with:
@@ -91,7 +91,7 @@ jobs:
     needs: [Setup, Lint, Type-Check]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4.3.0
         with:
@@ -125,7 +125,7 @@ jobs:
     outputs:
       test-groups: ${{ steps.set-groups.outputs.test-groups }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - id: set-groups
         shell: bash
         run: |
@@ -158,7 +158,7 @@ jobs:
     outputs:
       cypress-cache-key: ${{ steps.key.outputs.cypress-cache-key }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Generate cypress cache key
         id: key
         run: |
@@ -197,7 +197,7 @@ jobs:
       matrix:
         test-group: ${{ fromJson(needs.Get-Test-Groups.outputs.test-groups) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4.3.0
         with:
@@ -242,7 +242,7 @@ jobs:
     needs: [Unit-Tests, Cypress-Mock-Tests]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4.3.0
         with:
