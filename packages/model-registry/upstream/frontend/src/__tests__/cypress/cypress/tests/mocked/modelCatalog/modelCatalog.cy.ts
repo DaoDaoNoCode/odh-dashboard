@@ -240,6 +240,23 @@ describe('Model Catalog Page', () => {
     modelCatalog.findModelCatalogCards().should('have.length.at.least', 1);
   });
 
+  it('search input should not overflow its container when text is entered', () => {
+    initIntercepts({});
+    modelCatalog.visit();
+    modelCatalog
+      .findSearchInput()
+      .should('be.visible')
+      .type('a long search query to test overflow behavior')
+      .then(($el) => {
+        const parent = $el[0].parentElement;
+        expect(parent).to.not.be.null;
+        const inputRight = $el[0].getBoundingClientRect().right;
+        // Allow 1px tolerance for sub-pixel rounding
+        const parentRight = parent!.getBoundingClientRect().right;
+        expect(inputRight).to.be.at.most(parentRight + 1);
+      });
+  });
+
   it('should display model catalog filters', () => {
     initIntercepts({});
     modelCatalog.visit();

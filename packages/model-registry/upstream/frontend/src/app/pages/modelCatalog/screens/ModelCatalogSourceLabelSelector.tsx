@@ -142,7 +142,7 @@ const ModelCatalogSourceLabelSelector: React.FC<ModelCatalogSourceLabelSelectorP
                       placeholder="Filter by name, description and provider"
                       value={inputValue}
                       style={{
-                        minWidth: '600px',
+                        width: '100%',
                       }}
                       onChange={handleSearchInputChange}
                       onSearch={handleSearchInputSearch}

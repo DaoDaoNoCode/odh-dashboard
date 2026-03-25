@@ -292,6 +292,10 @@ class ModelCatalog {
     return this;
   }
 
+  findSearchInput() {
+    return cy.findByTestId('search-input');
+  }
+
   findPerformanceFiltersUpdatedAlert() {
     return cy.findByTestId('performance-filters-updated-alert');
   }

@@ -120,6 +120,10 @@ class ModelCatalog {
     });
   }
 
+  findSearchInput() {
+    return cy.findByTestId('search-input');
+  }
+
   findPerformanceViewToggle() {
     return cy.findByTestId('model-performance-view-toggle');
   }
