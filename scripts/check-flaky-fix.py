@@ -127,8 +127,23 @@ def fix_is_ancestor(fix_sha: str, target_sha: str) -> bool:
 # ── GitHub API helpers ─────────────────────────────────────────────────────────
 
 def get_check_runs(commit_sha: str) -> list[dict]:
-    data = gh_json("api", f"repos/{REPO}/commits/{commit_sha}/check-runs?per_page=100")
-    return data.get("check_runs", []) if isinstance(data, dict) else []
+    """Fetch ALL check runs for a commit, following pagination automatically."""
+    r = run_cmd([
+        "gh", "api", "--paginate",
+        f"repos/{REPO}/commits/{commit_sha}/check-runs?per_page=100",
+        "--jq", ".check_runs[]",
+    ])
+    if r.returncode != 0 or not r.stdout.strip():
+        return []
+    runs: list[dict] = []
+    for line in r.stdout.splitlines():
+        line = line.strip()
+        if line:
+            try:
+                runs.append(json.loads(line))
+            except (json.JSONDecodeError, ValueError):
+                pass
+    return runs
 
 
 def find_job_in_check_runs(check_runs: list[dict], job_pattern: str) -> Optional[dict]:
@@ -197,15 +212,73 @@ def detect_failing_test_job(fix_commit: str) -> Optional[dict]:
     return candidates[0] if candidates else None
 
 
-def infer_job_from_changed_files(pr_number: int, fix_commit: str) -> Optional[dict]:
+def _keywords_from_text(*texts: str) -> list[str]:
+    """Extract meaningful lowercase words (≥4 chars) from text(s), deduped, stop-words removed."""
+    stop = {
+        "test", "tests", "spec", "file", "from", "that", "this", "with",
+        "false", "check", "into", "should", "prevent", "when", "have",
+        "been", "will", "positive", "duplicate", "custom", "support",
+        "cypress", "mocked", "packages",
+    }
+    seen: set[str] = set()
+    result: list[str] = []
+    for text in texts:
+        for word in re.findall(r"[a-zA-Z]{4,}", text.lower()):
+            if word not in stop and word not in SKIP_JOB_KEYWORDS and word not in seen:
+                seen.add(word)
+                result.append(word)
+    return result
+
+
+def infer_job_from_changed_files(
+    pr_number: int, fix_commit: str, pr_title: str = ""
+) -> Optional[dict]:
     """
-    Fallback: derive the CI job from .cy.ts files changed in the fix PR.
+    Derive the CI job from files changed in the fix PR.
     The CI workflow maps test directory → job name 1:1, e.g.:
       cypress/tests/mocked/projects/tabs/ → Cypress-Mock-Tests (projects/tabs, ...)
+
+    Strategies (in order):
+    1. .cy.ts path: extract directory segment, try full path then each component
+    2. PR title keywords: match meaningful words against available test job names
     """
     files_data = gh_json("pr", "view", str(pr_number), "--repo", REPO, "--json", "files")
     changed_files = [f["path"] for f in (files_data.get("files") or [])]
 
+    check_runs = get_check_runs(fix_commit)
+    test_jobs = [
+        cr for cr in check_runs
+        if any(kw in cr["name"].lower() for kw in TEST_JOB_KEYWORDS)
+        and not any(kw in cr["name"].lower() for kw in SKIP_JOB_KEYWORDS)
+    ]
+
+    if not test_jobs:
+        return None
+
+    def first_match(keyword: str) -> Optional[dict]:
+        """
+        Return the best-matching test job for keyword.
+        Prefers an exact path boundary match (keyword followed by ',', ')', or space)
+        over a prefix match (e.g. 'pipelines' vs 'pipelines/topology').
+        """
+        kw = keyword.lower()
+        exact: Optional[dict] = None
+        partial: Optional[dict] = None
+        for cr in test_jobs:
+            name = cr["name"].lower()
+            idx = name.find(kw)
+            if idx == -1:
+                continue
+            after = name[idx + len(kw)] if idx + len(kw) < len(name) else ""
+            if after in (",", ")", " ", ""):
+                if exact is None:
+                    exact = cr
+            else:
+                if partial is None:
+                    partial = cr
+        return exact or partial
+
+    # Strategy 1: .cy.ts files → directory-based matching
     dir_segments: list[str] = []
     for path in changed_files:
         m = re.search(r"cypress/tests/(?:mocked|e2e)/(.+)/[^/]+\.cy\.ts$", path)
@@ -214,14 +287,21 @@ def infer_job_from_changed_files(pr_number: int, fix_commit: str) -> Optional[di
             if segment not in dir_segments:
                 dir_segments.append(segment)
 
-    if not dir_segments:
-        return None
-
-    check_runs = get_check_runs(fix_commit)
     for segment in dir_segments:
-        for cr in check_runs:
-            if segment.lower() in cr["name"].lower():
-                return cr
+        # 1a. Full segment (e.g. "projects/tabs" matches job "(projects/tabs, ...)")
+        if cr := first_match(segment):
+            return cr
+        # 1b. Each path component individually (e.g. "pipelines" from "pipelines/runs")
+        for part in segment.split("/"):
+            if part:
+                if cr := first_match(part):
+                    return cr
+
+    # Strategy 2: PR title keywords (for helper/support file changes with no .cy.ts)
+    for word in _keywords_from_text(pr_title):
+        if cr := first_match(word):
+            return cr
+
     return None
 
 
@@ -327,6 +407,56 @@ def log_contains_test(run_id: str, test_patterns: list[str]) -> Optional[bool]:
         return None
     log = strip_ansi(r.stdout).lower()
     return any(p.split(" > ")[-1].lower() in log for p in test_patterns)
+
+
+def detect_job_from_pre_fix_failures(
+    pre_fix_prs: list[dict],
+    pr_title: str = "",
+) -> Optional[str]:
+    """
+    Last-resort: scan the 10 most recent pre-fix PRs in parallel to find which
+    test job was most frequently failing (the flaky test's job).
+    Returns the job name string (not a check-run dict).
+    """
+    sample = pre_fix_prs[:10]
+    if not sample:
+        return None
+
+    def _fetch_failing_jobs(pr: dict) -> list[str]:
+        sha = pr.get("mergeCommit", {}).get("oid", "")
+        if not sha:
+            return []
+        return [
+            cr["name"]
+            for cr in get_check_runs(sha)
+            if cr.get("conclusion") == "failure"
+            and any(kw in cr["name"].lower() for kw in TEST_JOB_KEYWORDS)
+            and not any(kw in cr["name"].lower() for kw in SKIP_JOB_KEYWORDS)
+        ]
+
+    job_counts: dict[str, int] = {}
+    with ThreadPoolExecutor(max_workers=min(PARALLEL_WORKERS, len(sample))) as ex:
+        for failed_jobs in ex.map(_fetch_failing_jobs, sample):
+            for job in failed_jobs:
+                job_counts[job] = job_counts.get(job, 0) + 1
+
+    if not job_counts:
+        return None
+
+    # Score by frequency + bonus for title keyword matches
+    title_words = set(_keywords_from_text(pr_title)) if pr_title else set()
+
+    def score(job_name: str) -> tuple[int, int]:
+        title_bonus = sum(1 for w in title_words if w in job_name.lower())
+        return (title_bonus, job_counts[job_name])
+
+    best = max(job_counts, key=score)
+    count = job_counts[best]
+    if count >= 2:  # trust only if failing in ≥2 of the 10 sampled runs
+        print(f"Found repeatedly-failing job ({count}/10 recent pre-fix runs): {best}")
+        return best
+
+    return None
 
 
 # ── PR collection ──────────────────────────────────────────────────────────────
@@ -477,7 +607,12 @@ def main() -> None:
     remote = find_upstream_remote()
     fetch_main(remote)
 
-    # ── 3. Detect CI job ─────────────────────────────────────────────────
+    # ── 3. Collect candidate PRs (needed early for pre-fix job scan fallback) ──
+    print(f"\nFetching merged PRs around {fix_merged_at[:10]}...")
+    pre_fix_prs, post_fix_prs = collect_prs(fix_merged_at)
+    print(f"Found {len(pre_fix_prs)} pre-fix and {len(post_fix_prs)} post-fix candidates.")
+
+    # ── 4. Detect CI job ─────────────────────────────────────────────────
     fix_job_run_id: Optional[str] = None
     if args.job:
         job_pattern = args.job
@@ -488,31 +623,30 @@ def main() -> None:
         if not job_cr:
             print("No failing job on fix PR CI (test passed that run — flakiness).")
             print("Inferring job from changed test files...")
-            job_cr = infer_job_from_changed_files(pr_number, fix_commit)
-        if not job_cr:
-            sys.exit(
-                "Could not infer CI job automatically.\n"
-                "Use --job <pattern> to specify the job name manually.\n"
-                "Tip: check which directory your .cy.ts file lives in:\n"
-                "  cypress/tests/mocked/projects/tabs/ → --job 'projects/tabs'"
-            )
-        job_pattern = job_cr["name"]
-        fix_job_run_id = run_id_from_url(job_cr.get("details_url"))
+            job_cr = infer_job_from_changed_files(pr_number, fix_commit, pr_title)
+        if job_cr:
+            job_pattern = job_cr["name"]
+            fix_job_run_id = run_id_from_url(job_cr.get("details_url"))
+        else:
+            # Last resort: find the most frequently failing test job in recent pre-fix runs
+            print("Scanning recent pre-fix CI runs for the failing job...")
+            job_pattern = detect_job_from_pre_fix_failures(pre_fix_prs, pr_title) or ""
+            if not job_pattern:
+                sys.exit(
+                    "Could not infer CI job automatically.\n"
+                    "Use --job <pattern> to specify the job name manually.\n"
+                    "Tip: check which directory your .cy.ts file lives in:\n"
+                    "  cypress/tests/mocked/projects/tabs/ → --job 'projects/tabs'"
+                )
         print(f"Job      {job_pattern}")
-
-    # ── 4. Collect all candidate PRs in one API call ──────────────────────
-    print(f"\nFetching merged PRs around {fix_merged_at[:10]}...")
-    pre_fix_prs, post_fix_prs = collect_prs(fix_merged_at)
-    print(f"Found {len(pre_fix_prs)} pre-fix and {len(post_fix_prs)} post-fix candidates.")
 
     # ── 5. Parallel-fetch check runs for all candidates ───────────────────
     # Limit candidates passed to the parallel fetch to avoid excess API calls
     pre_candidates = pre_fix_prs[:150]
     post_candidates = post_fix_prs[:150]
-    all_candidates = pre_candidates + post_candidates
 
     print(f"Fetching CI check runs in parallel ({PARALLEL_WORKERS} workers)...")
-    pr_check_runs = fetch_check_runs_parallel(all_candidates)
+    pr_check_runs = fetch_check_runs_parallel(pre_candidates + post_candidates)
 
     # ── 6. Extract failing test name(s) ───────────────────────────────────
     if args.test:
