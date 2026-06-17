@@ -179,12 +179,13 @@ cd frontend && npm run test:cypress-ci -- --spec "**/testfile.cy.ts"
 
 ### Current Endpoints
 
-| Method | Path                 | Description                          |
-| ------ | -------------------- | ------------------------------------ |
-| GET    | `/healthcheck`       | Liveness probe (no auth)             |
-| GET    | `/api/v1/healthcheck` | Health check (with auth middleware) |
-| GET    | `/api/v1/user`       | Returns authenticated user info      |
-| GET    | `/api/v1/namespaces` | List namespaces (dev/mock mode only) |
+| Method | Path                       | Description                          |
+| ------ | -------------------------- | ------------------------------------ |
+| GET    | `/healthcheck`             | Liveness probe (no auth)             |
+| GET    | `/api/v1/healthcheck`      | Health check (with auth middleware)  |
+| GET    | `/api/v1/user`             | Returns authenticated user info      |
+| GET    | `/api/v1/namespaces`       | List namespaces (dev/mock mode only) |
+| POST   | `/api/v1/connections/test` | Test connection reachability         |
 
 ---
 

@@ -38,6 +38,7 @@ const (
 	ClusterSettingsPath      = APIPathPrefix + "/cluster-settings"
 	ComponentsRemovePath     = APIPathPrefix + "/components/remove"
 	AllowedUsersPath         = APIPathPrefix + "/status/:namespace/allowedUsers"
+	ConnectionTestPath       = APIPathPrefix + APIVersion + "/connections/test"
 	ConnectionTypesPath      = APIPathPrefix + "/connection-types"
 	ConnectionTypeSinglePath = APIPathPrefix + "/connection-types/:name"
 )
@@ -129,6 +130,7 @@ func (app *App) registerConfigRoutes(r *httprouter.Router) {
 }
 
 func (app *App) registerConnectionTypeRoutes(r *httprouter.Router) {
+	r.POST(ConnectionTestPath, app.TestConnectionHandler)
 	r.GET(ConnectionTypesPath, app.ListConnectionTypesHandler)
 	r.GET(ConnectionTypeSinglePath, app.GetConnectionTypeHandler)
 	r.POST(ConnectionTypesPath, app.requireAdmin(app.CreateConnectionTypeHandler))
