@@ -1,0 +1,89 @@
+---
+# yamllint disable rule:line-length
+# Syncs event descriptions from **/events.catalog.ts into the Amplitude tracking
+# plan (Taxonomy API). PRs only validate the catalogs (no secrets); pushes to main
+# and manual runs sync. See scripts/amplitude-sync/README.md.
+name: Amplitude taxonomy sync
+
+on: # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      - '**/*events.catalog.ts'
+      - 'scripts/amplitude-sync/**'
+      - '.github/workflows/amplitude-taxonomy-sync.yml'
+  push:
+    branches: [main]
+    paths:
+      - '**/*events.catalog.ts'
+      - 'scripts/amplitude-sync/**'
+      - '.github/workflows/amplitude-taxonomy-sync.yml'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only read from Amplitude and print the plan'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: '22'
+  # Catalog and script files are .ts files under package.json files without "type".
+  # Node detects them as ES modules correctly; this only silences the notice.
+  NODE_OPTIONS: '--disable-warning=MODULE_TYPELESS_PACKAGE_JSON'
+
+jobs:
+  validate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # The script has no npm dependencies, so no pnpm install is needed.
+      - name: Run sync script tests
+        run: node --test scripts/amplitude-sync/__tests__/*.test.ts
+
+      - name: Validate event catalogs
+        run: node scripts/amplitude-sync/sync.ts --validate
+
+  sync:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: amplitude-prod
+    concurrency:
+      group: amplitude-taxonomy-sync
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Sync event descriptions to Amplitude
+        env:
+          AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
+          AMPLITUDE_SECRET_KEY: ${{ secrets.AMPLITUDE_SECRET_KEY }}
+          AMPLITUDE_HOST: ${{ vars.AMPLITUDE_HOST }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          args=(--sync)
+          if [ "$DRY_RUN" = "true" ]; then
+            args+=(--dry-run)
+          fi
+          node scripts/amplitude-sync/sync.ts "${args[@]}"
