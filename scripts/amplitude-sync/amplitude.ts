@@ -1,7 +1,6 @@
 // Minimal Amplitude Taxonomy API client: https://amplitude.com/docs/apis/analytics/taxonomy
 // Deliberately has no delete method. Credentials are only used to build the
 // Authorization header and never appear in errors or logs.
-import type { CollectedEntry } from './catalog.ts';
 import type { AmplitudeCategory, AmplitudeEvent, EventChanges } from './plan.ts';
 
 export const DEFAULT_HOST = 'https://amplitude.com';
@@ -47,7 +46,7 @@ export type AmplitudeClient = {
   listEvents: () => Promise<AmplitudeEvent[]>;
   listCategories: () => Promise<AmplitudeCategory[]>;
   createCategory: (name: string) => Promise<void>;
-  createEvent: (entry: Pick<CollectedEntry, 'name' | 'description' | 'category'>) => Promise<void>;
+  createEvent: (event: { name: string; description: string; category: string }) => Promise<void>;
   updateEvent: (name: string, changes: EventChanges) => Promise<void>;
 };
 
@@ -194,6 +193,14 @@ export const createAmplitudeClient = (options: ClientOptions): AmplitudeClient =
       }
       if (changes.category !== undefined) {
         form.category = changes.category;
+      }
+      if (changes.tags !== undefined) {
+        // Replaces the whole tag list; an empty value clears it.
+        form.tags = changes.tags.join(',');
+      }
+      if (changes.displayName !== undefined) {
+        // eslint-disable-next-line camelcase
+        form.display_name = changes.displayName;
       }
       await request('PUT', `/api/2/taxonomy/event/${encodeURIComponent(name)}`, form);
     },

@@ -8,15 +8,18 @@ export const maasEvents = {
     name: 'TEST Sync Test A',
     description: 'Test entry A from the description sync spike. Safe to delete.',
     category: 'TEST Sync Test',
+    tags: ['team-maas'],
   },
   TEST_SYNC_B: {
     name: 'TEST Sync Test B',
     description: 'Test entry B from the description sync spike. Safe to delete.',
     category: 'TEST Sync Test',
+    tags: ['team-maas'],
   },
   TEST_SYNC_C: {
     name: 'TEST Sync Test C',
     description: 'Test entry C from the description sync spike. Safe to delete.',
     category: 'TEST Sync Test',
+    tags: ['team-maas'],
   },
 } as const satisfies EventCatalog;

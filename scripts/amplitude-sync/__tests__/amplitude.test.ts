@@ -55,6 +55,9 @@ const entry = (name: string, category = 'TEST Sync Test'): CollectedEntry => ({
   name,
   description: `Description for ${name} that is long enough.`,
   category,
+  status: 'active',
+  previousNames: [],
+  tags: [],
 });
 
 describe('createAmplitudeClient', () => {
@@ -133,6 +136,7 @@ describe('executePlan', () => {
     const fake = fakeFetch([
       { status: 200, body: { success: true } }, // POST category
       { status: 200, body: { success: true } }, // POST TEST New
+      { status: 200, body: { success: true } }, // PUT TEST New (tags)
       {
         status: 409,
         body: {
@@ -154,6 +158,7 @@ describe('executePlan', () => {
       [
         'POST /api/2/taxonomy/category',
         'POST /api/2/taxonomy/event',
+        'PUT /api/2/taxonomy/event/TEST New',
         'POST /api/2/taxonomy/event',
         'PUT /api/2/taxonomy/event/TEST Exists',
         'PUT /api/2/taxonomy/event/TEST Changed',
@@ -167,11 +172,13 @@ describe('executePlan', () => {
       updated: ['TEST Exists', 'TEST Changed'],
       failures: [],
     });
+    assert.equal(fake.calls[2].body, 'tags=odh-catalog');
     assert.equal(
-      fake.calls[3].body,
+      fake.calls[4].body,
       new URLSearchParams({
         description: entry('TEST Exists').description,
         category: 'TEST Sync Test',
+        tags: 'odh-catalog',
       }).toString(),
     );
   });
@@ -180,6 +187,7 @@ describe('executePlan', () => {
     const plan = computePlan([entry('TEST A'), entry('TEST B')], [], [{ name: 'TEST Sync Test' }]);
     const fake = fakeFetch([
       { status: 400, body: { success: false, errors: ['invalid'] } },
+      { status: 200, body: { success: true } },
       { status: 200, body: { success: true } },
     ]);
     const { sleep } = recordSleep();

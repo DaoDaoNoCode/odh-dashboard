@@ -19,6 +19,9 @@ const entry = (overrides: Partial<CollectedEntry> = {}): CollectedEntry => ({
   name: 'Form Saved',
   description: VALID_DESCRIPTION,
   category: 'Forms',
+  status: 'active',
+  previousNames: [],
+  tags: [],
   ...overrides,
 });
 
