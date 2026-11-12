@@ -1,8 +1,9 @@
 ---
 # yamllint disable rule:line-length
-# Syncs event descriptions from **/events.catalog.ts into the Amplitude tracking
-# plan (Taxonomy API). PRs only validate the catalogs (no secrets); pushes to main
-# and manual runs sync. See scripts/amplitude-sync/README.md.
+# Syncs event descriptions, categories, tags and display names from
+# **/events.catalog.ts into the Amplitude tracking plan (Taxonomy API). PRs validate
+# the catalogs, including that no shipped event name was dropped (no secrets);
+# pushes to main and manual runs sync. See scripts/amplitude-sync/README.md.
 name: Amplitude taxonomy sync
 
 on: # yamllint disable-line rule:truthy
@@ -39,10 +40,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      # Full history so --base can find the merge base and read the base catalogs.
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          fetch-depth: 0
           persist-credentials: false
+
+      # The name-stability check skips itself when the base ref is missing, so make sure
+      # the ref exists instead of silently not checking.
+      - name: Ensure the base branch ref exists
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if ! git rev-parse --verify --quiet "refs/remotes/origin/${BASE_REF}^{commit}" >/dev/null; then
+            git fetch --no-tags origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
+          fi
+          git rev-parse --verify "refs/remotes/origin/${BASE_REF}^{commit}"
 
       - name: Set up Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
@@ -53,8 +67,10 @@ jobs:
       - name: Run sync script tests
         run: node --test scripts/amplitude-sync/__tests__/*.test.ts
 
-      - name: Validate event catalogs
-        run: node scripts/amplitude-sync/sync.ts --validate
+      - name: Validate event catalogs and name stability
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: node scripts/amplitude-sync/sync.ts --validate --base "origin/${BASE_REF}"
 
   sync:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
