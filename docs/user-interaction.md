@@ -156,3 +156,5 @@ type: Opaque
 data:
    segmentKey: [segment key in base64]
 ```
+
+<!-- amplitude sync spike: case 8 path-filter test -->
