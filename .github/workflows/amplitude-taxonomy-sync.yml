@@ -37,7 +37,6 @@ jobs:
   validate:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    environment: amplitude-prod # TEMP: test case 2, PR jobs must not reach the keys
     timeout-minutes: 10
     steps:
       - name: Checkout
