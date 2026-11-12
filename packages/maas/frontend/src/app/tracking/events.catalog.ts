@@ -11,7 +11,7 @@ export const maasEvents = {
   },
   TEST_SYNC_B: {
     name: 'TEST Sync Test B',
-    description: 'Test entry B from the description sync spike. Safe to delete.',
+    description: 'Test entry B, changed in a PR for test case 7. Safe to delete.',
     category: 'TEST Sync Test',
   },
   TEST_SYNC_C: {
