@@ -45,6 +45,7 @@
     "test:adr": "./hack/__tests__/lint-adr.test.sh",
     "test:css-guard": "node --test scripts/__tests__/check-css-lowering.test.js",
     "test:renovate-automerge": "node --test .github/scripts/__tests__/*.test.js",
+    "test:amplitude-sync": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test scripts/amplitude-sync/__tests__/*.test.ts",
     "test:cypress-ci": "pnpm --filter odh-dashboard-frontend test:cypress-ci",
     "test:unit": "pnpm run test:dsc-workaround && pnpm run test:css-guard && turbo run test:unit",
     "lint:frontend:backend": "run-p test:lint:*",
